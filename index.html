@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>りゅー / うゆり - Links</title>
+  <meta name="description" content="りゅー / うゆりのリンク集。X、Discord サーバー、つくったツール、YouTube、note など。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="りゅー / うゆり - Links">
+  <meta property="og:description" content="X、Discord サーバー、つくったツール、YouTube、note などのリンク集">
+  <meta property="og:url" content="https://princetottino10-bit.github.io/link/">
+  <meta property="og:image" content="https://princetottino10-bit.github.io/link/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@suke69">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap');
 
@@ -107,6 +115,79 @@
       max-width: 440px;
       margin: 0 auto;
     }
+
+    /* 共有ボタン */
+    .share {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
+      font: 700 13px/1 'Inter', 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .share-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .share-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.24);
+    }
+
+    .share-btn.primary {
+      border: 0;
+      color: #1a1203;
+      background: linear-gradient(90deg, #f5c518, #e8432a);
+      box-shadow: 0 6px 22px rgba(232,67,42,0.3);
+    }
+
+    .share-btn.primary:hover { box-shadow: 0 8px 28px rgba(232,67,42,0.45); }
+
+    .share-btn:focus-visible { outline: 2px solid #f5c518; outline-offset: 3px; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 10;
+      transform: translate(-50%, 16px);
+      padding: 11px 20px;
+      border-radius: 999px;
+      background: rgba(10,22,40,0.92);
+      border: 1px solid rgba(245,197,24,0.5);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
     .divider {
       width: 60px;
@@ -291,6 +372,17 @@
       <p class="profile-bio">
         営業マン｜スマブラSP鯖『すますぺおじさんのつどい』鯖主｜ゲームオフ『Gameria』主催｜ボードゲーム『Compile/コンパイル』にハマっています｜何かあればXのDMまでどうぞ！
       </p>
+
+      <div class="share">
+        <button type="button" class="share-btn primary" id="shareBtn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+          このページを共有
+        </button>
+        <button type="button" class="share-btn" id="copyBtn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.5 1.5M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.5"/></svg>
+          URLをコピー
+        </button>
+      </div>
     </div>
 
     <!-- X Account -->
@@ -440,5 +532,52 @@
       <div class="footer-text">デジタルゲーム &amp; ボードゲームイベント</div>
     </div>
   </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var URL_TO_SHARE = 'https://princetottino10-bit.github.io/link/';
+      var toast = document.getElementById('toast');
+      var timer = 0;
+
+      function show(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(timer);
+        timer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      function copy() {
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(URL_TO_SHARE).then(function () { show('URLをコピーしました'); }, fallback);
+        }
+        fallback();
+      }
+
+      /* クリップボード API が使えないブラウザ向け */
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = URL_TO_SHARE;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { /* 失敗したら下で知らせる */ }
+        document.body.removeChild(ta);
+        show(ok ? 'URLをコピーしました' : URL_TO_SHARE);
+      }
+
+      document.getElementById('shareBtn').addEventListener('click', function () {
+        if (navigator.share) {
+          navigator.share({ title: document.title, url: URL_TO_SHARE }).catch(function () { /* 閉じただけ */ });
+        } else {
+          copy();
+        }
+      });
+      document.getElementById('copyBtn').addEventListener('click', copy);
+    })();
+  </script>
 </body>
 </html>
