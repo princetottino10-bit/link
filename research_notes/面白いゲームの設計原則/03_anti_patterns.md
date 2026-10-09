@@ -272,3 +272,74 @@ AP は「選択肢が多すぎる・複雑すぎる・結果の評価が難し�
 - Rosewater の Making Magic 本文で土地破壊・カウンター・ディスカードを論じた回（例: Mechanical Color Pie）の原文は取得できなかった。
 - Marvel Snap 開発ブログでの「フィールバッド」議論（例: 特定カードのナーフ理由）は今回確保できず。
 - ハードロック（Stax, Blood Moon 等）を直接論じた Wizards 公式記事は未確認（Commander Brackets の「block people from playing」が最も近い）。
+
+---
+
+## 12. 【4人プレイ特化】多人数戦固有のアンチパターンと処方箋（Multiplayer-specific: kingmaking / bash-the-leader / turtling / elimination / 4人時のダウンタイム / 攻撃対象の公平性 / 2v2 / 人数スケーリング）
+
+### Takeaway
+3人以上の対立ゲームでは「遅れている者同士が組んでリーダーを叩く（bash-the-leader）」「争いに加わらない者が漁夫の利で勝つ」「亀（turtling）」「キングメイキング」が構造的に発生する（Pulsipher の "Three-Player Problem"）。これは Alex Jaffe のいう「呪われた問題（cursed problem）」＝プレイヤーへの約束同士の衝突であり、完全解決はできず、①勝敗情報を隠す、②特定の1人を狙いにくくする（攻撃範囲の制限・複数人同時効果・共有目標）、③同時手番でダウンタイムを消す、④脱落や合流でゲームを畳む、⑤チーム戦に約束を変える、で回避する。4人用カードゲームでは「誰を攻撃するか」の自由度が最大の設計変数。
+
+### Cited Findings
+**構造的問題（3人以上の対立ゲーム）**
+- Lewis Pulsipher「The Three-Player Problem」（*Tabletop: Analog Game Design*, 2011 所収）によれば、3人の対立ゲームでは遅れている2人が組んでリーダーを攻撃する。その結果: (1) 固定の終わりがないと新リーダーが叩かれ続ける「終わらないゲーム」、(2) 戦いに加わらなかった者が勝つ（攻撃側は資源を消耗して弱る）、(3) キングメイキング — [Skeleton Code Machine: Solving the three-player problem (2024-05-14)](https://www.skeletoncodemachine.com/p/three-player-problem)
+- 関連問題 — 同上:
+  - **Turtling（亀）**: 防御だけに専念し、争われない地域で資源を溜め終盤に攻める戦略。例 *Blood Rage*、*Eclipse: Second Dawn for the Galaxy*。**人数に対してマップが広いと亀が容易**になる
+  - **Leader bashing**: Pulsipher の定義「単に先頭にいる者を攻撃する傾向」。例: *Root*（キャット侯爵家が狙われがち）、*Oath*、*Pax Pamir 2nd Ed.*
+  - **Sandbagging（実力隠し）**: 標的にならないよう進捗を隠す。主に隠し情報がある時に成立
+  - **Kingmaking**: 語は W. Schmittberger 由来とされ、負け確の者が個人的理由で勝者を選ぶ「petty diplomacy」。例 *Kemet: Blood & Sand* の終盤。「ほぼ常にゲームデザイン上望ましくないとされる」
+- 提案される解決策（同記事）:
+  1. **勝利情報を隠す**: *Troyes* の隠しエンドゲーム勝利カード
+  2. **直接インタラクションを減らす**（ユーロ型マルチソリティア）
+  3. **突然の/予告された/阻止される勝利**: リーダーが攻撃されることを受け入れ、「先頭が入れ替わる」こと自体を特徴として設計
+  4. **均衡と慣性（Equilibrium and inertia）**: 1手で状況が劇的に動かないよう状態変化を小さく
+  5. **脱落**: 勝てない者を除外しキングメイクを防ぐ（ただし退屈のリスク）。*Ankh: Gods of Egypt* の「合流（the merge）」＝下位2人が1人のプレイヤーに統合される
+  6. **2位にも得点**（大会・連戦で2位・3位にポイント。例 *Rallyman GT*）
+  7. **1人だけを狙いにくくする**: 行動が複数プレイヤーに同時に効く。例 *The King Is Dead* の影響力 vs 支配の仕組み
+- 反論: *Root*、*Pax Pamir*、COIN シリーズのように「他者を監視し政治すること」自体を楽しさの中心にするゲームもあり、常に問題とは限らない — 同上
+- **呪われた問題（Cursed Problems）**: Alex Jaffe（Riot Games, GDC 2019）は「核となるプレイヤーへの約束（player promises）同士の衝突に根ざす解決不能な設計問題」と定義し、キングメイキングを主要例とした（「特定のスキルを重視したい」と「政治を誘発する自由対戦PvP」の衝突）。対処は4つの設計パラダイムで「回避」すること — [GDC Vault: Cursed Problems in Game Design](https://gdcvault.com/play/1025756/Cursed-Problems-in-Game); [スライドPDF](https://media.gdcvault.com/gdc2019/presentations/Jaffe_Alex_Cursed_Problems_In.pdf); [Xsolla 要約](https://accelerator.xsolla.com/blog/cursed-problems-in-game-design)
+  - 読者の要約（Jaffe本人の言葉ではない）:「ゲーム自体の熟達を重視し、かつ勝利を重視する多人数戦は両立できず、ゲームが約束するものを変えるしかない」 — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+  - キングメイキングは、ゲームの目的を「個人の勝利」から「集団の目標と意思決定の交差」へずらした場合には意味を持つ — 同上（検索スニペット経由）
+
+**攻撃対象の公平性（Targeting fairness）**
+- MTG 多人数ルールの「影響範囲の制限（Limited Range of Influence）」: 呪文・能力・ダメージ・攻撃・選択・勝利の影響が及ぶ席数を制限（1席または2席が一般的）。Free-for-All では「左を攻撃（attack left）」「右を攻撃」「複数プレイヤーを攻撃」のいずれか1つを採用。Grand Melee は attack left＋範囲1 — [MTG Wiki: Free-for-All](https://mtg.wiki/page/Free-for-All); [MTG Wiki: Grand Melee](https://mtg.wiki/page/Grand_Melee)
+- Emperor（3v3）: 皇帝は範囲2、将軍は範囲1、攻撃は隣席のみ（総合ルール 809） — [MTG Wiki: Emperor](https://mtg.wiki/page/Emperor); [MTG Comprehensive Rules (2018 PDF)](https://media.wizards.com/2018/downloads/MagicCompRules%2020180810.pdf)
+- *Smash Up*（2-4人）: 特定の席を攻撃するのではなく、全員が共有の「基地（Base）」に力を置き、基地が満ちたら1〜3位が得点。15VPで勝利 — [AEG: Smash Up Munchkin Rulebook](https://www.alderac.com/wp-content/uploads/2015/07/smashup-munchkin-rulebook.pdf)（＝共有標的による「名指し攻撃」の回避。ルールの事実は公式ルールブック、設計意図の解釈は推論）
+- *7 Wonders* は軍事衝突を隣人とのみ行う（各時代終了時） — [BGA News](https://en.boardgamearena.com/news?id=388)
+
+**4人時のダウンタイム：同時手番**
+- Antoine Bauza は「大半のユーロは4人前提で、人数を増やすとダウンタイムが楽しさを上回る」問題を解くため、*7 Wonders* を「最大7人でも目立ったダウンタイムがない」ことを目標に設計。手段は同時ドラフト（全員が同時に1枚選び、残りを隣に渡す） — [Miniature Market: 7 Wonders Review](https://www.miniaturemarket.com/7wondersreview.html); [Repos Production](https://www.rprod.com/en/press/7-wonders)
+- BGA ではリアルタイム対戦が4人以上でも10〜15分 — [BGA News](https://en.boardgamearena.com/news?id=388)
+- 同時手番は *Race for the Galaxy* の役職選択でも使われ、意思決定を簡素化するが、サプライズや大きな揺れも生むので注意して使う — [League of Gamemakers Part 2](https://www.leagueofgamemakers.com/designing-games-to-prevent-analysis-paralysis-part-2)
+- 注意: 同時ドラフトは人数が少ないほど1人が握る選択の比重が大きくなる（7 Wonders 2nd Ed は3-7人表記、初版は2人用ルールあり） — [検索結果の総括（各リテーラー）](https://www.rprod.com/en/press/7-wonders)
+
+**2v2 チーム戦**
+- MTG「双頭巨人戦（Two-Headed Giant, 2HG）」: チームはライフ30を共有（他の資源は共有しない）、チーム単位で同時にターンを進行（ドロー・攻撃・ブロック・全フェイズ）、カードの「あなた」は個人を指すが「各対戦相手」「各プレイヤー」は個人ごとに作用、味方へのアタッカーもブロック可、先攻チームは最初のドローを飛ばす — [Wizards: Two-Headed Giant](https://magic.wizards.com/en/formats/two-headed-giant)
+- 2v2 をイベントで運用する際は「各プレイヤー」効果の扱い（例: 「各プレイヤーは2点失う」→チームは4点失う）を明文化し、相談・手札の見せ合いを許可する例がある — [Fastaval](https://www.fastaval.dk/en/?p=24029)
+- ファンの Hearthstone 2v2 案: ライフ共有（通常の2倍）、マナ非共有、手番順は「チーム1-A → チーム2-A → チーム1-B → チーム2-B」の交互（公式モードではない） — [Out of Games フォーラム](https://outof.games/realms/hearthstone/4w7/fantasy-formats-what-do-you-want/)
+- 2HG は確率計算・深い読み・重い盤面管理の練習になるとの評価 — [TappedOut: Why You Need Two-Headed Giant](https://tappedout.net/mtg-articles/2016/may/23/why-you-need-two-headed-giant-your-life-part-1)
+
+**2〜4人のスケーリング**
+- *Brass: Birmingham* は人数で資源と使用マップ範囲を調整（2人では北部の一部を除外） — [Brain Games: How to adjust setup for 2-6 players](https://brain-games.com/blogs/board-game-explorer/how-to-adjust-board-game-setup-for-2-6-players)
+- *Vinci* は初期軍数で人数を吸収し常に領土が衝突するようにし、*Small World* は人数別に異なるボードを用意 — [r/BoardgameDesign スレッド](https://lr.ggtyler.dev/r/BoardgameDesign/comments/1eb22rc/amount_of_territories_depending_on_player_count)
+- 両面ボードで地域を統合し、チョークポイント等の戦略要素は保ったまま少人数時の空き地を減らす案 — 同上（設計者フォーラムの意見）
+- 人数変化はターン時間・資源分配・ゲームの流れに影響する；長いゲームでは終了タイマーを人数でスケールさせる；全対応人数でテストする — [Brain Games: How player count impacts game design](https://brain-games.com/blogs/board-game-explorer/how-player-count-impacts-game-design)
+- マップが人数に対して広すぎると亀が容易 — [Skeleton Code Machine](https://www.skeletoncodemachine.com/p/three-player-problem)
+- *Agricola* の席順統計: 3-4人戦で最終席が明確に不利（4人戦: 1席約26%・4席約23%）。人数が増えるほど手番順補償の検証が必要 — [BGA Forum](https://forum.boardgamearena.com/viewtopic.php?p=147926)
+- *Race for the Galaxy* は直接インタラクションが少ないため投了者が出ても他に影響が小さい（多人数戦での頑健性）— [Law of Game Design](https://lawofgamedesign.com/2014/10/08/theory-concession-proofing-your-game/)
+
+### Inferences
+- **4人カードゲーム向け設計チェックリスト（推論・統合）**:
+  1. *攻撃対象*: 「自由に誰でも攻撃」はキングメイキング・袋叩き・恨みの温床。候補は (a) 左隣/両隣限定（MTG attack left、7 Wonders の隣人軍事）、(b) 共有目標の取り合い（Smash Up の基地）、(c) 全員に同時に効く効果、(d) 「リーダーのみ」を対象にできる明示ルール（袋叩きを制度化して政治を減らす）。(a)は公平だが席順の運に依存するため、席替え・複数ゲームでの平均化が前提。
+  2. *順位の可視性*: 隠し得点・終了時ボーナスで sandbagging と leader bashing を両方抑える（ただし隠しすぎると「何をすれば良いか分からない」になる）。
+  3. *ダウンタイム*: 4人だと他人の手番×3を待つ。同時選択（ドラフト、同時公開）、手番を「1アクション」に短縮、他人の手番に反応できる割り込み（インスタント/リアクション）を少量入れる。割り込みは多すぎると手番が延びるので「1ラウンド1回」等で制限。
+  4. *脱落*: 原則避ける。必要なら短時間ゲーム限定、または脱落者に役割（Ankh の合流、ゴースト役）を与える。
+  5. *亀*: 終了条件をラウンド上限・共有トラックにし、溜め込みに時間的コストを与える／共有目標に参加しないと得点できない構造にする。
+  6. *2v2 バリアント*: ライフや得点など「勝敗資源」は共有、行動資源（手札・マナ）は非共有が典型（2HG）。手番は同時進行（2HG）か交互（A1-B1-A2-B2）。チーム戦はキングメイキングを構造的に消す（約束を「個人勝利」から「チーム勝利」に変える＝Jaffe の言う回避の一形態）。
+  7. *2→4人スケーリング*: 共有ボード/市場の大きさ・初期資源・終了タイマーを人数で可変に。2人時のみ「ダミー/中立プレイヤー」を入れる手もある（一般知識、出典なし）。
+- **検出方法（推論）**: 4人テストで「誰が誰を攻撃したか」の有向グラフを記録し、リーダーへの集中度・席順依存・報復の連鎖を見る。各手番の時間と「自分の手番以外で何かしていたか」を記録。最下位プレイヤーの最終数ラウンドの行動が勝敗に影響したかを確認（キングメイキング検出）。
+
+### Gaps
+- Jaffe の講演本体で提示された「4つの設計パラダイム」の具体名は今回の取得範囲では確認できなかった（スライドPDFは未精読）。
+- ダミープレイヤー設計に関する信頼できる一次資料は見つからなかった。
+- Games Precipice の「Player Count & Scalability」「Turn Order」記事は503で取得できず、スニペットのみ。
