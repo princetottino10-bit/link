@@ -252,3 +252,60 @@
 ### Gaps
 - BGG の「2人用トップ」公式リストへ直接アクセスできず、ランク情報は二次ガイド（Board Game Quest、ofzenandcomputing 等）に依存した。二次ガイドで頻出するのは 7 Wonders Duel、Patchwork、Jaipur、Lost Cities、Twilight Struggle、Onitama、Splendor Duel、Codenames Duet、Sky Team、Brass: Birmingham、Fantasy Realms。— [ofzenandcomputing](https://www.ofzenandcomputing.com/best-two-player-board-games/)／[Board Game Quest](https://boardgamequest.com/top-10-2-player-board-games)
 - Ludology、No Pun Included、Dice Tower の個別エピソードは今回確認できなかった。
+
+---
+
+## 4人で面白い理由：ダウンタイム・キングメイキング・リーダー叩き・4人間インタラクションの扱い
+
+> 追加スコープ（コーディネーター指示）：4人で遊ぶゲームを作るため、4人で好評な作品が4人特有の問題をどう処理しているかを整理した。出典は検索エンジンの要約を経由しており、原文は未確認。
+
+### Takeaway
+4人で好評な作品は、4人特有の4つの問題に構造的な答えを持っている。
+- **ダウンタイム**：同時選択／同時ドラフト（7 Wonders、Sushi Go Party、Libertalia）か、他人の手番にも反応・発言できる仕組み（Coup のチャレンジ、Avalon の投票と議論、Cosmic の同盟招待）。
+- **キングメイキング／リーダー叩き**：非公開得点（Ticket to Ride の目的地チケット）、勝敗が最後まで読めない設計、対象を「人」ではなく「役職」で指定する間接攻撃（Citadels の暗殺者）、隣だけとのインタラクション（7 Wonders）、チーム化・協力化（Codenames、The Crew、Avalon）。
+- **脱落**：脱落があっても1ラウンドが極短（Love Letter）なら許容され、長いゲームでの早期脱落（Bang!）は最大の批判点になる。
+- **4人間インタラクション**：共有マップの混雑（Ticket to Ride）、一時的な同盟（Cosmic）、全員参加の採点構造（Dixit）が、4人という人数を「乱戦の楽しさ」に変えている。
+
+Smash Up は4人だとベースが混み合って盛り上がる一方、4位は無得点になりやすく、カードテキストと計算の負荷が増す。
+
+### Cited Findings
+
+#### ダウンタイム対策
+- **7 Wonders**：全員が同時に1枚選んで残りを隣に渡すので、手番待ちがない。インタラクションは両隣だけなので、卓全体を追わなくてよい。各時代の7枚目は捨てられるため、総手番数は必ず18で約30分。人数を増やしても遅くならない稀な作品とされる。— [boardgaming.com](https://boardgaming.com/games/7-wonders)／[Strange Assembly](https://www.strangeassembly.com/?p=2334)／[Meeple Mountain](https://www.meeplemountain.com/reviews/7-wonders/)。ただし Strange Assembly は「4人だけで遊ぶなら良いゲームだが、wow要素は薄れる」と書いている。— [Strange Assembly](https://www.strangeassembly.com/?p=2334)
+- **Sushi Go Party**：同時に選んで同時に公開するので待ちがない。約20分。各回の採点カードを選んでメニュー（デッキ）を組むため、人数や難易度に合わせられる。4人は手札8枚。— [ICv2](https://icv2.com/articles/reviews/view/35522/review-sushi-go-party-card-game)／[Tom's Epic Gaming](https://www.tomsepicgaming.com/sushi-go-review)
+- **Libertalia（原作）**：全員が同じ9枚の役職から始め、同時に1枚選ぶ。相手の持ち札は分かるが、どれを出すかは分からない。同時選択でペースは常に軽快。4人で真価を発揮するという BGG 投票ベースの集約情報がある。— [I Slay the Dragon](https://islaythedragon.com/game-reviews/penchant-for-plunder-a-review-of-libertalia)／[Opinionated Gamers](https://opinionatedgamers.com/2012/08/06/dale-yu-review-of-libertalia/)／[BoardMatch（集約）](https://boardmatch.app/en/game/125618)
+- **Coup**：他人の役職宣言に誰でもチャレンジできる。約10〜15分。「本当に持っていたら前のターンにそれをしたか？」という多層の読み合い。— [Strange Assembly](https://www.strangeassembly.com/?p=4870)／[Board Game Quest](https://www.boardgamequest.com/coup-card-game-review/)
+- **Codenames**：待ち時間はスパイマスターがヒントを考える間に集中し、「誰にとっても楽しくない」という批判がある。ヒントの思考時間をまとめて取る改善案も出ている。プレイヤーが交代でスパイマスターをやるために3〜4回連続で遊ばれる。— [The Fandomentals](https://www.thefandomentals.com/codenames-review/)／[Mechanics of Magic](https://mechanicsofmagic.com/?p=5543)／[Theology of Games](https://theologyofgames.com/blog/2016/3/1/tinker-tailor-soldier-assassin-a-single-take-review-of-codenames)
+- **Citadels**：人数が多いと手番間のダウンタイムがかなり出る。— [Miniature Market](https://miniaturemarket.com/reviewcorner/citadels-review)
+- **Terraforming Mars**：4人を推奨とする情報がある一方、2人なら好きだが3人以上はためらうという声もある。ドラフトがあると計画できない苛立ちとインタラクションの両方が生じる。— [Centurion's Review](https://centurionsreview.com/terraforming-mars/terraforming-mars-review/)／[Quarter to Three forum](https://forum.quartertothree.com/t/boardgaming-in-2017/127711?page=50)
+
+#### キングメイキング・リーダー叩きへの対処
+- **一般論**：リーダー叩きは「先頭を攻撃する傾向」、キングメイキングは「負けが確定した者が勝者を選ぶ」こと。代表的な対策は、非公開得点、終盤の得点増加やゲーム後ボーナス、複数勝利条件、終了タイミングの不確定化、インタラクションを減らすこと、特定プレイヤーを狙いにくくすること。— [Skeleton Code Machine: Is kingmaking a problem to be solved?](https://www.skeletoncodemachine.com/p/kingmaking)／[The Thoughtful Gamer: Losing Propositions](https://thethoughtfulgamer.com/2017/09/16/losing-propositions/)。逆に Cole Wehrle は、キングメイキングは他勢力との関係を考えさせ物語を生むとして擁護している（GDC 2019 Board Game Design Day）。— [GDC Vault: "King Me"](https://www.gdcvault.com/play/1025683/contactUs)
+- **Ticket to Ride**：目的地チケットは非公開で終了時まで点にならないので、誰が勝っているか読みにくい。4人ではマップが混雑して「より挑戦的になって良かった」。相手の狙いを読んで線路を塞ぐのは正当な戦術だが、意味のない妨害は資源の無駄になる。— [Tampere Univ. PlayLab](https://blogs.tuni.fi/playlab/game-reviews/ticket-to-ride-a-game-that-takes-you-on-an-adventure/)／[Co-op Board Games](https://coopboardgames.com/cooperative-board-game-reviews/ticket-to-ride/)／[Polyhedron Collider](https://www.polyhedroncollider.com/2012/11/ticket-to-ride-review.html)
+- **Citadels**：暗殺者と盗賊は「人」ではなく「役職」を指定するので、リーダーを狙うには当て推量が要る（叩きが直接的になりにくい）。役職は人数より1枚多く、伏せ札もあるので確定できない。王冠（次ラウンドの選択権）は毎回移る。テイクザットの辛辣さは人を選ぶ。— [Miniature Market](https://miniaturemarket.com/reviewcorner/citadels-review)／[AV Club](https://www.avclub.com/citadels-review)／[Unboxed](https://www.unboxedtheboardgameblog.com/post/2019/03/06/game-night-reviews-citadels)
+- **Cosmic Encounter**：毎回の遭遇で双方が同盟者を招けて、複数人の共同勝利があり得る。長期同盟は損になるので、その場その場の取引になる。同盟が多すぎると結果が平板になるという警告もある。— [eriktwice](https://eriktwice.com/en/2022/10/23/cosmic-encounter-board-game-review/)／[There Will Be Games](https://therewillbe.games/articles-boardgame-reviews/5276-cosmic-encounter-and-expansions-review)
+- **King of Tokyo**：Tokyo に入った者が全員から殴られる（リーダーの位置が明示されている）。20VPか最後の生存者で勝ち。負けている位置からの逆転はほぼ不可能という批判がある。約30〜45分で、3〜5人がベスト。— [Gaming Trend](https://gamingtrend.com/reviews/king-of-tokyo-review-only-one-can-take-the-throne/)／[Board Game Quest](https://boardgamequest.com/king-of-tokyo-board-game-review)
+
+#### 脱落の扱い
+- **Love Letter**：16枚、ガードの宣言当てなどで脱落するが、1ラウンドは数分なので早く脱落しても待ち時間は短く、次のラウンドですぐ復帰できる。約20分。運が大きいという批判がある（Coup の方が好きという声も）。— [Theology of Games](https://www.theologyofgames.com/blog/2013/05/23/return-to-sender-a-review-of-love-letter)／[Opinionated Gamers](https://opinionatedgamers.com/2025/04/17/dale-yu-review-of-love-letter/)／[Roll to Review](https://rolltoreview.com/love-letter-card-game-review/)
+- **Bang!**：保安官だけが正体を明かす隠し役職の推理は好評。一方、最初の手番前に脱落して30分以上待たされることがあり、楽しくない。手札が悪いと何もできない手番が続く。— [Tampere Univ. PlayLab](https://blogs.tuni.fi/playlab/game-reviews/ode-to-the-shoot-outs-of-spaghetti-westerns-bang-review/)
+- **Avalon**：善陣営は議論・告発・推理で正体を探る。チーム編成の投票とクエストの2フェーズ制。「早くてうるさい」社会派推理。5〜10人、約30分（4人では遊べない点に注意）。— [Board Game Quest](https://www.boardgamequest.com/the-resistance-avalon-card-game-review/)／[Zatu](https://zatu.com/en-us/blogs/reviews/the-resistance-avalon-review)／[Dice Tower](https://dicetower.com/board-game/128882)
+
+#### 4人間のインタラクションを面白くする仕掛け
+- **Dixit**：語り部のヒントが全員に当てられても誰にも当てられなくても語り部は0点で、一部だけが当てたときに語り部と正解者が3点。他プレイヤーは自分のカードに入った票1つごとに1点。「明白すぎず難解すぎず」を強制し、相手をよく知る人が報われる。— [Official Dixit Rules](https://officialgamerules.org/game-rules/dixit/)／[God is a Geek](https://godisageek.com/2013/11/dixit-review/)／[sheep.horse](https://sheep.horse/2013/7/game_review_-_dixit.html)
+- **The Crew**：協力トリックテイキング。伝達は「カード1枚＋トークンで最高／最低／唯一を示す」だけに制限され、長い沈黙が生まれる。4人が最適という声がある。— [The Thoughtful Gamer](https://thethoughtfulgamer.com/2020/05/23/the-crew-review/)／[There Will Be Games](https://therewillbe.games/articles-boardgame-reviews/8276-the-crew-the-quest-for-planet-nine-review)／[Wikipedia](https://en.wikipedia.org/wiki/The_Crew_(card_game))
+- **Dune: Imperium**：カードの上段で行ける場所が決まり、下段がリヴィール効果になる二重用途カード。ワーカープレイスメントとデッキ構築が相互依存している。各ラウンド末の戦闘は兵を送った者だけで争い、報酬は事前に公開される。戦闘が戦術より資源量勝負だという批判もある。1〜4人、60〜120分。— [Meeple Mountain](https://www.meeplemountain.com/reviews/dune-imperium/)／[Zatu](https://zatu.com/dune-imperium-review/)／[Frontline Gaming](https://frontlinegaming.org/2025/04/11/board-game-review-dune-imperium/)
+- **Wingspan**：直接対立は少なく、「相手と戦うより一緒に遊んでいる感覚」の Euro。4ラウンドでエンジンが育つ感覚が短くまとまっている。— [Tabletop Gaming](https://www.tabletopgaming.co.uk/reviews/wingspan-review)／[Zatu](https://zatu.com/en-au/blogs/reviews/wingspan-review)／[Gigazine](https://gigazine.net/gsc_news/en/20220103-wingspan-board-game/)。Terraforming Mars は Wingspan よりインタラクションが多いと比較されている。— [Centurion's Review](https://centurionsreview.com/terraforming-mars/terraforming-mars-review/)
+- **Smash Up（4人）**：3〜4人の方が良く、2人でも成立する。4人戦ではベースが5つになり、4方向からカードが置かれて卓が混沌とする。ベースの得点は通常上位3人までなので、4位は無得点になりやすい。基地と全カードの特殊テキストが重荷。派閥ミックスによるリプレイ性は高評価。— [Board Game Quest](https://www.boardgamequest.com/smash-up-review/)／[Opinionated Gamers](https://opinionatedgamers.com/2018/10/11/smash-up/)／[Theology of Games](https://www.theologyofgames.com/blog/2012/08/27/a-review-of-smash-up)
+
+### Inferences
+- 4人用で「面白い」と言われる作品は、(1) 同時性（待たせない）、(2) 他人の手番でも意思決定がある（チャレンジ、投票、同盟、ブロック判断）、(3) 先頭が誰か曖昧（非公開点、役職指定の攻撃、最後の得点爆発）のうち、少なくとも2つを満たしている傾向がある。
+- Compile 型（レーン多数決＋表裏）を4人に拡張する場合の素直な候補は3つ。(a) 隣接2人とだけレーンを共有する（7 Wonders の「両隣」方式）。(b) 2対2のチーム戦にして伝達を制限する（The Crew／Codenames 的）。(c) 全員が同時にカードを伏せて出し、同時公開する（Libertalia／Sushi Go 方式）。いずれもダウンタイムとリーダー叩きを同時に抑える方向。（推測）
+- Smash Up の4人戦の弱点（4位の無得点、テキストと計算の負荷）は、得点を4位まで配る、またはデジタル化して自動計算するといった対策で緩和できる可能性がある。（推測）
+- 脱落を入れるなら、Love Letter のように「1ラウンド数分＋複数ラウンド制」にするのが前提条件。長いゲームでの脱落は Bang! のように最大の不満になる。
+
+### Gaps
+- Exploding Kittens、Sky Team 以外の Bang! 系作品、Wingspan の低インタラクションに対する明確な批判レビューは、今回は取得できなかった。Wingspan の「マルチプレイヤー・ソリティア」評は一般にあるとされるが出典未確認。
+- Avalon／The Resistance は5人以上専用で、4人では遊べない（Dice Tower 掲載値5〜10人）。4人で同種の体験を求めるなら Coup／Love Letter／Citadels が代替になる。
+- 各作の「4人がベスト」とする BGG 人数投票の実数値は、BGG に直接アクセスできず未取得（集約サイトの記述のみ）。
+- Dune: Imperium の4人戦固有の評価（3人戦と比べてどうか）は見つからなかった。
