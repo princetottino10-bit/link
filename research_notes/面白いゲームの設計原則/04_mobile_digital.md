@@ -172,6 +172,38 @@ Snap への主な批判は「ロケーションのランダム性で、カード
 
 ---
 
+## Q7.（スコープ追加）スマホで3〜4人オンライン対戦: 同時手番・待ち時間対策・FFA/バトロワ・ロビーUX・切断時のBot代行
+
+### Takeaway
+多人数では「待ち時間（downtime）」が人数に比例して悪化するため、成功例は (a) 全員同時に選んで一斉公開（7 Wonders / Sushi Go のドラフト、Snap 型リビール）、(b) 全員同時の準備フェーズ＋ペア対戦（Hearthstone Battlegrounds / TFT）、(c) 非同期＋持ち時間制（Board Game Arena）のいずれかで解決している。FFA は「順位制（1位〜N位）」と早期脱落→即再キューで負けの痛みを軽くしている。切断は「持ち時間切れ→スキップ/除外」か「Bot代行」で処理するが、Bot が遅い・弱いとプレイヤー体験を損なう。
+
+### Cited Findings
+- **同時ドラフト**: Sushi Go は 7 Wonders / Fairy Tale のドラフトを20分ゲームに凝縮。各パスで全員が手札から1枚選び、全員選んだら同時公開。2〜5人対応、手札枚数を人数で調整（2人10枚、3人9枚、4人8枚、5人7枚）、3ラウンド制、15〜20分 — [Meeple Mountain: 7 Wonders review](https://www.meeplemountain.com/reviews/7-wonders-review-a-monumental-design/) / [Zatu: Sushi Go](https://zatu.com/products/sushi-go) / [Boardgaming.com: Sushi Go 2nd ed.](https://boardgaming.com/games/card-games/sushi-go-second-edition)（※「同時選択で人数が増えても待ちが増えない」「手札枚数調整でラウンド長を一定に保つ」は検索結果ツールによる推論であり出典の明言ではない）
+- **Hearthstone Battlegrounds（8人FFA）**: 各ラウンドは酒場での募集フェーズ（recruit）→他プレイヤー1人と自動戦闘、の繰り返し — [PC Gamer: How to play Battlegrounds](https://pcgamer.com/how-to-play-hearthstones-battlegrounds-mode)
+- Battlegrounds 開発陣（Dean Ayala ら）:「楽しくするには8人が必要だと分かっていた」。1v1にない社交的なグループ体験を狙った。バトルロイヤル同様、早期脱落してもすぐ再キューできるので、1v1より負けの痛みが小さい。8人対応はサーバー側の安定化に大きな工数を要した — [Game Developer: Why the Hearthstone devs wanted to make an auto battler](https://gamedeveloper.com/design/why-the-i-hearthstone-i-devs-wanted-to-make-an-auto-battler)
+- Battlegrounds Duos 開発時、HP/アーマーの共有、同時に戦うか、カード受け渡しを試行。Trios/Quads にしなかった理由は「考慮すべき盤面が2つだけの方が戦略を立てやすい」(Mitchell Loewen) — [Digital Trends](https://digitaltrends.com/?p=3458971)（検索結果要約より）
+- **TFT の設計の柱**: Mastery（知識・柔軟性・運の管理 fortune・読み perception・速さ。クリック精度や反応速度は重視しない）、Playful Competition、Discovery。毎ラウンド1人とペアになり相手のアリーナで戦う。Little Legends のエモート・ダンスで社交性。共有ドラフト「カルーセル」では全員が回転する10体から数秒で奪い合う — [TFT /dev: Design Pillars of TFT](https://teamfighttactics.leagueoflegends.com/en-gb/news/dev/dev-design-pillars-of-tft)
+- TFT はカルーセル内容を変えて「適応力を最も報われるスキルにする」方針 — [TFT /dev: Galaxies systems update](https://teamfighttactics.leagueoflegends.com/en-us/news/dev/dev-teamfight-tactics-galaxies-systems-update/)
+- **Board Game Arena（多人数ボドゲの非同期/リアルタイム）**: リアルタイム（live）と非同期（turn-based）の2モード。持ち時間は分単位（リアルタイム）/日単位（非同期）で、手番ごとに加算、上限は初期値。持ち時間がマイナスになると他プレイヤーがその人の手番をスキップでき、離脱者は短時間で除外・不戦勝処理できる設計。除外は任意で、まず復帰を促す方が良いとしている。持ち時間なしはフレンド戦以外非推奨（離脱者をスキップできないため） — [BGA Doc: Game clock](https://en.doc.boardgamearena.com/Game_clock)（※公式に deprecated 表記あり、現行FAQ要確認）
+- BGA ユーザーの不満: 非同期で相手がタイムアウトし続ける、スキップを最下位の人が恣意的に使える（合意制を求める声）、リアルタイム→非同期変換後の短い非アクティブ制限で試合がキャンセルされる — [BGA forum: timing out](https://forum.boardgamearena.com/viewtopic.php?p=149519) / [BGA forum: inactivity limit](https://forum.boardgamearena.com/viewtopic.php?p=227519)
+- **ルームコード/プライベート戦**: Exploding Kittens アプリは後からオンライン対戦を追加し、ランダムマッチに加えホストが共有するコードでのプライベート戦に対応 — [TouchArcade](https://toucharcade.com/2016/03/16/exploding-kittens-finally-has-online-multiplayer-including-private-games)。レビューの主な不満は「知らない人との対戦での時折の切断」 — [Stuff.tv review](https://www.stuff.tv/app-reviews/exploding-kittens/review)
+- **切断時の Bot 代行**: Ticket to Ride アプリの更新履歴に「ゲーム開始時にプレイヤーを置き換えた bot の挙動修正」があり、Bot置換を採用 — [diandian (Google Play changelog)](https://app.diandian.com/app/q4kdipurgox2cwn/googleplay-ver)。Catan Universe ではネット不調のプレイヤーが長い待機の後 AI に置換され、その AI も手番に時間がかかる、離脱でレート減といった不満 — [Steam: Catan Universe](https://steamcommunity.com/app/544730/discussions/0/1354868867727022420) / [Steam](https://steamcommunity.com/app/544730/discussions/0/1742227264206438819)。他作品でも「通知なしで友人がAIに置き換えられた」不満 — [Stardock forum](https://www.stardock.com/games/article/474457/friend-randomly-kicked-out-of-multiplayer-game-and-replaced-by-ai-without-n)
+
+### Inferences
+- 4人スマホ対戦では、交互ターン（1人30秒×3人待ち＝90秒の待機）は致命的になりやすい。Compile × Smash Up 系なら「全員が同時に裏向きでカードを基地/プロトコルに配置 → 優先権順に一斉公開・解決」（Snap型）か、「同時ドラフト＋同時配置」を基本にすると待ちがほぼゼロになる。
+- 交互ターンを残す場合の待ち時間対策: 他人の手番中も自分の手札・次の計画を操作できる（先行入力）、他人の手番中にも反応できるイベント（Smash Up の基地得点で全員が関与）、手番タイマーを短く（15〜30秒）、解決アニメはスキップ/倍速可能に。
+- FFA の負けを軽くするには「順位ポイント制（1位〜4位すべてに意味）」や、Battlegrounds のような1ラウンド内のペア対戦構造が使える。4人で直接攻撃し合う場合は「首位叩き」「キングメイカー」問題が出るため、基地（共有目標）を奪い合う間接的インタラクション（Smash Up の基地得点はまさにこれ）が相性が良い。
+- 多人数ではペア対戦の方が盤面認知が軽い（Battlegrounds Duos の「盤面2つが限界」発言）。スマホ画面で4人分の盤面を同時表示するより、「共有の基地列＋自分の手札＋他人は要約（得点・手札枚数）」のレイアウトが現実的。
+- ロビーUX: ルームコード（短く、紛らわしい文字を除く）＋共有リンク、ホストが開始、空席は Bot で埋めて開始可、Ready 表示。
+- 切断: 猶予（例: 30〜60秒）中はタイマー継続→期限切れで Bot が即座に（遅延なく）代行、本人が復帰したら席を返す、Bot代行中であることを全員に通知（無通知置換は不満の元）。Bot は「高速・無難」な手を打つ簡易AIで十分。
+
+### Gaps
+- Battlegrounds の募集フェーズのタイマー設計、TFT のラウンド長、Uno 公式アプリ・Exploding Kittens の Bot 代行仕様についての公式資料は見つからなかった。
+- 7 Wonders デジタル版や 7 Wonders Duel アプリの多人数UX評価は今回未調査。
+- 4人同時リビール型カードゲーム（Snap 型を多人数化した商用例）の具体例は見つからなかった。
+
+---
+
 ### 付記: 調査で未カバーの範囲（全体）
 - Ben Brode の GDC 講演本体（gdcvault 会員限定）、Anthony Giovannetti「Slay the Spire: Metrics Driven Design and Balance」（GDC 2019）本体は未視聴。後者の概要: 早期からメトリクス重視、Early Access中もデータ駆動で調整、コミュニティフィードバックとの付き合い方 — [GDC news](https://gdconf.com/news/learn-slay-spires-successful-metrics-driven-approach-game-balancing-gdc-2019) / [Game Developer](https://www.gamedeveloper.com/design/learn-i-slay-the-spire-i-s-metrics-driven-approach-to-game-balancing-at-gdc-2019)
 - Ascension アプリ、Inscryption、Shadowverse、4Gamer/ファミ通の日本語開発者インタビューは今回の調査件数内で有用な一次情報を得られなかった。

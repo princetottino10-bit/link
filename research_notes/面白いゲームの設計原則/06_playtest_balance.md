@@ -245,6 +245,96 @@ AIプレイテストは「露骨な不均衡を早期に見つける警報装置
 
 ---
 
+## 7. 【追加範囲】4人用ゲームのテストとバランス：席順の有利不利、人数別テスト、多人数ボット (Paranoid / Max-n)、キングメイキングの検出、4人戦の指標
+
+### Takeaway
+4人戦では「公平な勝率」が25%になり、席順の影響は2人戦より大きく出やすい。大規模データでは1番席が約29〜31%、4番席が約20〜22%で、両端の差は数ポイント規模。ただしゲームによっては2番席が最も有利という逆の例もあるため、必ず自作ゲームで測る必要がある。多人数用のAIは、「各自が自分の得点を最大化する」Max-n（MCTS版）を基本にし、「全員が自分を潰しに来る」と仮定する Paranoid と比べると、リーダー叩きやキングメイキングへの耐性を調べられる。キングメイキングを自動で検出する確立された方法は見つからなかったが、René Wiersma の「3条件」が観察・計測のチェックリストとして使える。
+
+### Cited Findings
+**席順の有利不利 (Seat / Turn-order advantage)**
+- MTG統率者戦 (Commander) の4人卓約24.4万試合（単独勝者）での席別勝率：1番席29.2%、2番席25.7%、3番席23.6%、4番席21.5%（公平値25%）。席が後になるほど単調に下がり、長い試合でも差は残る — [Playgroup.gg: Commander Turn Order](https://playgroup.gg/commander/turn-order)（自己申告の記録データで、無作為標本ではない）
+- cEDH（競技版統率者戦）の大会648卓の分析：1番席31.5%、4番席20.2%。95%信頼区間で25%と統計的に区別できる — [Topdeck.gg: first player advantage](https://topdeck.gg/articles/first-player-adv-silicon-dynasty)（個人による分析）。関連記事：[EDHREC: Does cEDH Have a Seat Order Problem?](https://edhrec.com/articles/does-cedh-have-a-seat-order-problem)
+- アグリコラ（BGAのデータ, 2022）：最後の席は得点・勝率ともに明確に不利。3〜4人戦では1番席より2番席のほうが成績が良い。開始時のEloの差では説明できない — [BGA forum: Agricola Statistics Update Apr–Sep 2022](https://forum.boardgamearena.com/viewtopic.php?p=127163)
+- アグリコラの4番席の補正案（BGAフォーラム）：
+  - 1ラウンド目だけ逆順 (snake) で手番を回す
+  - 同点の場合は4番席の勝ち（WBC大会ルールで採用済みとされる）
+  - 4番席に初期食料+1
+  - いずれも議論・提案の段階で、勝率データはそのページにはない — [BGA forum: 4th seat compensation](https://forum.boardgamearena.com/viewtopic.php?p=229144)
+- BGAの別ゲーム（タイトル不明）：4人戦4,390試合で1番席26.6% — [BGA forum: First player advantage?](https://forum.boardgamearena.com/viewtopic.php?p=104883)
+
+**人数ごとのテスト (Player-count scaling)**
+- 人数は手番の長さ、資源の配分、ゲームの流れに影響する。プレイ時間の長期化、戦略の偏り、開始位置の不公平といった問題が起きうる。対策は、人数ごとに資源・盤面サイズ・得点・ゲーム長を調整すること — [Brain Games: How player count impacts game design](https://brain-games.com/blogs/board-game-explorer/how-player-count-impacts-game-design)（小売店のブログ）
+- 待ち時間の見積もり：1手番2分なら、6人戦では自分の番が回ってくるまで約10分待つ。対策は同時行動、手番の簡素化、他人の手番中にも参加できる仕組み。カルカソンヌのように人数に依存しない終了条件（タイルが尽きたら終了）も有効 — 同上 / [BGDF: how many players](https://www.bgdf.com/forum/archive/archive-game-creation/game-design/how-many-players)
+- 「N人に対応している」と「N人用に設計されている」は違う。人数ごとに専用の調整をする — [Brain Games](https://brain-games.com/blogs/board-game-explorer/how-to-adjust-board-game-setup-for-2-6-players)
+- 新人デザイナーの例：ほぼ完成するまで4人戦を大量に回し、その後で少人数向けに調整していった — [Zatu: First Time Designer #17](https://zatu.com/first-time-designer-17-2/)
+- 人数が多い作品のバランスやテスター集めについて：[Board Game Design Lab: Darren Terpstra](https://boardgamedesignlab.com/designing-games-with-higher-player-counts-with-darren-terpstra/)
+- 人数が増えるほど混沌とし、プレイヤー1人ごとにランダム性が1段増える、という指摘 — [BGDF: how many players](https://www.bgdf.com/forum/archive/archive-game-creation/game-design/how-many-players)
+
+**多人数用のAIボット (Max-n / Paranoid / Best-Reply Search / MCTS)**
+- Max-n（Luckhardt & Irani 1986）：各プレイヤーが自分の評価値を最大化すると仮定する。Paranoid（Sturtevant & Korf 2000）：他の全員が結託して自分を最小化すると仮定する。Paranoid は枝刈りが効くが、仮定が誤っていることが多く、守りに入りすぎる — [Nijssen & Winands: An Overview of Search Techniques in Multi-Player Games](https://dke.maastrichtuniversity.nl/m.winands/documents/Multi_Overview.pdf)
+- Sturtevant (2002) の比較：
+  - ダイヤモンドゲーム (Chinese Checkers) では Paranoid が大きく勝ち、ハーツでは小差で勝ち、スペードでは互角。
+  - Max-n では同点時の扱い (tie-breaking) が決定的に重要 — [Sturtevant 2002](https://cs.du.edu/~sturtevant/papers/sturtevant2002comparison.html)
+- Best-Reply Search (BRS)：「自分を妨害するのは相手のうち1人だけ」と仮定する。αβ系の手法では総じて最良 — [Best-Reply Search PDF](https://dke.maastrichtuniversity.nl/m.winands/documents/BestReplySearch.pdf)
+- MCTSに Max-n / Paranoid / BRS の方針を組み込んで比較した研究（Nijssen & Winands, ICGA Journal 2013、完全情報の4ゲーム）：
+  - 総合では Max-n 方針のMCTSが最良だった。MCTSにはαβ枝刈りがないため、Paranoid や BRS の利点が活きない。
+  - 対象は特定のゲーム（Chinese Checkers, Focus, Rolit, Blokus）なので、他のゲームへの一般化には注意 — [ICGA Journal](https://content.iospress.com/articles/icga-journal/icg36102) / [Maastricht CRIS](https://cris.maastrichtuniversity.nl/portal/en/publications/search-policies-in-multiplayer-games(3835680f-afad-4008-ba14-f1c1bfa9a126).html)
+
+**キングメイキング (Kingmaking) と関連する問題**
+- 定義：負けが確定したプレイヤーが、残りの誰を攻撃するかなどで勝者を事実上決めてしまうこと。失望感や主体性 (agency) の喪失を生み、場の空気を悪くする — [Skeleton Code Machine: Solving the three-player problem](https://www.skeletoncodemachine.com/p/three-player-problem)
+- 関連する問題：
+  - 引きこもり (turtling)：守りに徹して争いに参加しない
+  - リーダー叩き (leader bashing)：首位の人を全員で攻撃する
+  - 実力隠し (sandbagging)：自分の好調を隠す
+  - 対策：勝利点を非公開にする、相互作用を減らす、脱落制、特定の1人を狙い撃ちしにくくする（各行動が少しずつ、複数人に影響する形にする）
+  - 「グループ全体の目標や決定が主眼のゲームなら、キングメイキングは問題ではない」という見方もある — 同上 / [Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- 最悪のキングメイキングの3条件（René Wiersma, BGDF）。どれか1つを崩せば影響は減る：
+  1. そのプレイヤーの手が、他のプレイヤー間の勝敗を決める
+  2. どの手を選んでも、本人の順位は改善しない
+  3. 本人がそれを自覚している — [BGDF: TIGD – Kingmaking common problem](https://bgdf.com/forum/archive/archive-game-creation/topics-game-design/tigd-kingmaking-common-problem-2)
+- 競争型のレースゲーム（Xに到達したら勝ち）は、勝者決定が全か無かになるのでキングメイキングが起きやすい — 同上
+- Alex Jaffe（GDC 2019「Cursed Problems」）は、キングメイキングを「直せない問題」の一つとし、ゲームを根本から変えて回避するしかないと位置づけた（検索要約経由） — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- 3人戦では、首位を止めるための一時的な同盟が自然に生まれる。こうした同盟の形式的研究は結論が出ておらず、何が「合理的」なプレイかを形式的に定義するのが難しい。2位を決めてしまう「プリンスメイキング (princemaking)」という現象もある — [Ithaca College paper](https://ithaca.edu/file-download/download/public/71183)
+- 首位を逆転できなくなったら退屈になるため、首位交代やドラマは多人数ゲームでも中心的な指標になる（Risk の研究では2人用の設定で定義） — [Rossato et al. arXiv 2310.20008](https://arxiv.org/pdf/2310.20008)
+
+### Inferences
+- **4人戦のシミュレーション設計案**（AIアシスタントに実装させる）：
+  1. **席の回転 (seat rotation)**：同じ組み合わせの陣営・ボットを、4席すべて（理想は4! = 24通りの並び）で回し、席の効果と陣営の効果を分けて集計する。
+  2. **基準ボットの種類**：
+     - ランダムボット
+     - 貪欲ボット (greedy)
+     - Max-n型（自分の得点を最大化）のMCTS
+     - Paranoid型（自分以外の合計を最小化）
+     - リーダー叩き型（首位の得点を下げる手を優先）
+     - 組み合わせの例：Max-n ×4（基準）、Max-n ×3＋リーダー叩き ×1、全員リーダー叩き
+     - 卓の構成によって勝率や首位交代がどう変わるかを見る。リーダー叩きだけで首位交代が激増するなら、ゲームは「叩き合い」に依存している。
+  3. **キングメイキングの自動検出（Wiersma の3条件をコード化）**：終盤の各局面で、ほぼ確実に負けているプレイヤー（例：MCTSでの勝率推定が5%未満）について、選べる手ごとに残り3人の勝率を推定する。
+     - 条件1：手によって「誰が勝つか」の分布が大きく変わる（例：最有力者の勝率が手ごとに20ポイント以上ずれる）
+     - 条件2：本人の勝率・順位はどの手でもほぼ同じ
+     - 両方を満たす局面を「キングメイク局面」として数え、1試合あたりの発生率を指標にする。閾値は推論による仮置き。
+     - 条件3（自覚）は、情報が公開されているかどうかで代わりに判定する。得点を非公開にすれば自覚しにくくなる。
+- **4人戦で追加する指標**：
+  - 席別勝率（公平値25%）と、席別の平均順位・平均得点
+  - 2番手・3番手の「惜しさ」（1位との点差の分布）
+  - 首位交代回数と、最終ラウンド直前の首位が最終的に勝った割合
+  - 脱落・事実上の脱落（勝率推定が一定値未満になった時点から終了までの手番数＝「消化試合の長さ」）
+  - 手番間の待ち時間（1手番の平均時間×3）
+  - キングメイク局面の発生率
+- **サンプル数の目安**（二項分布での推論）：4人戦の席別勝率（p≈0.25）を±2ポイント（95%信頼区間）で測るには、各席あたり約1,800試合が必要（1.96×√(0.25×0.75/n) ≈ 0.02 から計算）。人間のテストでは数十試合しかできないため、席順の有利不利は人間のテストではほぼ検出できない。シミュレーションに任せるのが現実的。
+- **人数別テストの順序案**：デザインの中心となる人数（今回は4人）で核を固める → 2人・3人の調整（盤面サイズ、ダミープレイヤー、資源量）→ 各人数で席別勝率と試合時間をシミュレーションと人間のテストの両方で確認する。3人戦は「2人が組んで1人を叩く」形になりやすいので、別途観察する（Ithaca の論文、Skeleton Code Machine）。
+- **席順補正の選択肢**（アグリコラの議論より）：
+  - 後の席ほど初期資源を多くする
+  - 1ラウンド目を逆順 (snake) にする
+  - 同点時は後の席を勝ちにする
+  - 調整したら、補正後の席別勝率を再度シミュレーションで確認する。補正の目標値（例：全席が25%±2ポイント）はデザイナー自身が決める基準で、業界で決まった数字ではない。
+
+### Gaps
+- 4人用ボードゲーム（統率者戦以外）で、席別勝率を大規模に公開・分析した一次資料は少ない。アグリコラの具体的な席別勝率の数値は今回取得できなかった。
+- キングメイキングを自動検出する学術的な手法は見つからなかった（上記は推論による設計案）。
+- 4人戦の首位交代やドラマの目標値を定めた資料は見つからなかった。
+
+---
+
 ## 付録：資料から組み立てた段階的プレイブック（推論による統合）
 
 1. **問いを決める**：「このゲームの核となる体験は何か」「今回のテストで確かめる問い」を1行で書く（Schell の原則より）。

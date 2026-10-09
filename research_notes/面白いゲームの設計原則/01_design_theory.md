@@ -237,3 +237,45 @@ SDT（自律性・有能感・関係性）はゲームの楽しさと継続を�
 ### Gaps
 - 損失回避（Kahneman & Tversky のプロスペクト理論）、ニアミス効果、変動比率強化（variable ratio reinforcement）のゲームへの適用についての出典は今回未取得。Engelstein『Achievement Relocked』（ゲームにおける行動経済学）がこの領域の有力な資料と思われるが未確認。
 - Daniel Cook（Lost Garden）のスキル原子（skill atoms）・ループ理論は今回調査できなかった。
+
+## 10. 4人プレイへの示唆（多人数ダイナミクス：キングメイキング、リーダー叩き、人数スケーリング、ダウンタイム、同時行動、2対2チーム戦）
+
+### Takeaway
+4人ゲームでは、2人対戦にはない「キングメイキング」「リーダー叩き」「ダウンタイムの増大」が主要リスクになる。対処法は、①勝敗状況の可視性を調整する（得点の秘匿・計算困難化）、②攻撃が攻撃者自身の利益にもなるようにする、③ゲームを短く・接戦に保つ、④同時行動（ドラフト、秘密選択）や手番外の関与でダウンタイムを削る、の組み合わせ。2対2のパートナー戦は「相手の手札が見えない味方を理解する」という独自の面白さを持ち、4人ゲームの有力な選択肢。
+
+### Cited Findings
+- キングメイキング（kingmaking）の定義：負けが確定したプレイヤーが、通常は残りの誰かを攻撃することで、事実上勝者を選んでしまうこと — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- Lewis Pulsipher はこれを「petty diplomacy problem」と呼び、勝者が「最も上手いプレイヤー」ではなく負けを悟ったプレイヤーにより恣意的に決まる問題とする。勝つ見込みのないプレイヤーにはゲーム内の判断理由がないため、ゲーム外の恨みや友情、「復讐」で選ぶことになり、マジックサークルを壊す — [Skeleton Code Machine: Is kingmaking a problem to be solved?](https://www.skeletoncodemachine.com/p/kingmaking)
+- 用語の起源：Garfield が1998年頃のゲームデザイン用語エッセイで政治用語から「kingmaking」を借用し、「勝つ見込みのないプレイヤーがメカニクスによって最終的な勝者を決める力を持つ状況」と定義した、とする回想（出典エッセイ未確認のため要注意） — [LessWrong comment (greaterwrong)](https://greaterwrong.com/posts/jkf2YjuH8Z2E7hKBA/diplomacy-as-a-game-theory-laboratory/comment/3FuAJLwB7wQmazH3W)
+- 『Characteristics of Games』目次に「Characteristic: Kingmaking」（多人数の節）がある — [MIT Press Bookstore](https://mitpressbookstore.mit.edu/book/9780262542692)
+- 関連問題：リーダー叩き（leader bashing＝先頭を集団で攻撃）、亀戦法（turtling＝守りに籠って衝突を避ける）、サンドバッギング（sandbagging＝好調を隠す）。調査ではキングメイキング42%、リーダー叩き23%が「最悪の問題」とされ、亀戦法は0% — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- 3人の衝突ゲームでは、遅れている2人が組んで先頭を攻撃するのが一般的（リーダー叩きがキングメイキングの引き金） — [Skeleton Code Machine: Solving the three-player problem](https://www.skeletoncodemachine.com/p/three-player-problem)
+- 対策の分類（Part 1）：勝利情報の秘匿（hidden victory information）、プレイヤー間干渉の低減、プレイヤー脱落、特定の1人を狙いにくくする — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- Alex Jaffe の4技法（同記事の紹介）：Barriers（約束破りにつながる行動を制限、例：ゲーム内交渉の禁止）、Gates（成功・得点を隠す、計算しにくくする）、Carrots（勝者以外の順位にも報酬、例：大会での2・3位ポイント）、Smores（ゲーム自体を楽しくし交渉・秘密の道具を与える） — [Skeleton Code Machine: Is kingmaking cursed?](https://www.skeletoncodemachine.com/p/is-kingmaking-cursed)
+- 具体例：Kemet はゲームの短さ（約1.5時間）と全員が勝利に「近い」位置から始まることでキングメイキングを緩和。Time of Crisis では先頭を叩く行動が攻撃者自身の終盤目標の前進にもなるため、私怨と見なされない。「キング・オブ・ザ・ヒル」型は先頭を維持し続けることを要求する — [The Thoughtful Gamer: Losing Propositions](https://thethoughtfulgamer.com/2017/09/16/losing-propositions/); [Bumbling Through Dungeons: Holding the Lead](https://bumblingthroughdungeons.com/king-of-hill-combative-board-games/)
+- 反対意見：Cole Wehrle の GDC 講演「King Me」は、プレイヤー同士の妨害を恐れない多人数競争デザインを擁護（キングメイキングを必ずしも除去すべき問題とみなさない） — [GDC Vault: "King Me": A Defense of King-Making](https://www.gdcvault.com/play/1025683/contactUs)
+- ダウンタイムは人数とともに増える（例：ワーカープレイスメントで3人→6人だと手番間の時間が大幅増） — [Brain Games: How player count impacts game design](https://brain-games.com/blogs/board-game-explorer/how-player-count-impacts-game-design)
+- 同時行動（simultaneous action selection）：7 Wonders はドラフトで全員同時にプレイし、ダウンタイムがほぼゼロでプレイ時間が人数に依存しない。Wings for the Baron は秘密に2アクションを選び同時解決。ただし個人の思考時間差は残る — [Zatu: Simultaneous action games](https://zatu.com/blogs/features/board-game-mechanics-simultaneous-action-games); [Make It Big in Games: Why Wait?](https://makeitbigingames.com/2024/09/why-wait-turning-sequential-turns-into-simultaneous-turns/)
+- その他のダウンタイム対策：他者の手番への割り込み（interrupt）、共有資源・手番外でも状態に影響できる仕組み、1手番を小さくする（選択肢を減らす）、他者の手番を観戦価値のあるものにする — [BGDF: Boardgame downtime](https://www.bgdf.com/blog/boardgame-downtime); [There Will Be Games: The Concept of Downtime](https://therewillbe.games/articles-essays/8361-the-concept-of-downtime)
+- 2対2パートナー戦：パートナー制は4人カードゲームの定番だが、デザイナーズゲームでは過小評価されている。勝敗を共有しつつ互いの手札を見せられないため、味方のプレイ傾向を学ぶ必要があり、それが繰り返しプレイを促す — [There Will Be Games: Abstraction: Tichu](https://therewillbe.games/articles-analysis/8536-abstraction-tichu)
+- Tichu：どのカードを誰に渡すか、それで味方にどんな合図を送るか、という小さく大きな賭けの決定。ブリッジは規約（conventions）の層が深さを生むが習得が重く、Tichu は一晩で教えられる — [There Will Be Games: Abstraction: Tichu](https://therewillbe.games/articles-analysis/8536-abstraction-tichu); [Boise Weekly: Time to teach you about Tichu](https://www.idahopress.com/boiseweekly/rec_and_sports/game_of_the_week/time-to-teach-you-about-tichu/article_5c420f7d-891b-5d83-9789-bca992d19bb2.html)
+- パートナー戦が少ない理由として、4人以上必須なことと、1人がチームの決定を支配しがちなことが挙げられ、隠匿情報と役割分担が支配への対策になりうる。4人は多くの人にとって「スイートスポット」 — [BGDF: Team based gaming](https://www.bgdf.com/forum/game-creation/design-theory/team-based-gaming)
+
+### Inferences
+- 第1〜9節の理論を4人向けに読み替えると：
+  - MDA：Fellowship（仲間意識）と「誰が勝っているかの明確なフィードバック」が対立しうる。勝敗状況を完全公開すると叩き・キングメイキングを誘発するので、「おおよそは分かるが正確には分からない」（Jaffe の Gates：非公開得点、終了時精算ボーナス）程度が4人向けの適正点。
+  - Meier の「状況依存の決定」：4人では「誰に対して」行動するかという標的選択が新たな決定軸になる。標的選択が私怨にならないよう、攻撃が自分の得点にも直結する設計（Time of Crisis 型）にする。
+  - Costikyan の「相手の予測不能性」は人数とともに増えるが、分析的複雑さも増え分析麻痺・ダウンタイムにつながる。1手番の選択肢を2人用より絞るのが安全。
+  - 雪だるま問題（MDA モノポリー分析、Garfield の Snowball/Catch-up）は4人では「リーダー叩き」という自然な追い上げ機構を持つ反面、それが過剰になると「先頭に立つと損」→サンドバッギングが生じる。自然な叩きに任せるか、システム側の追い上げ（補助・課税）に任せるかを明確に決める。
+  - Flow／緊張曲線：4人ではダウンタイムが最大のフロー阻害要因。目安として「自分の番以外の3人分の時間」に何をさせるかを設計する（同時ドラフト、リアクションカード、他者の行動に便乗するフォロー権＝Puerto Rico のロール選択型など）。
+- 4人カードゲーム設計の具体的選択肢：
+  - 同時選択＋一斉公開（7 Wonders 型ドラフト、秘密入札）：ダウンタイム削減と読み合いを両立。
+  - 2対2チーム戦モード：キングメイキングが構造的に消える（全員が最後まで勝ち負けに関与）。Tichu のような「カード交換による合図」「限定的な情報共有」で味方の理解を楽しさにする。1人の支配を防ぐため、チーム内の手札は非公開・会話制限を基本にする。
+  - 個人戦の場合は、終盤まで接戦を保つ（全員が勝利に近い位置から開始、短時間化）、負けが確定したプレイヤーが出ないよう終了トリガーを早める、2位以下にも意味を持たせる（Carrots）などでキングメイキングを抑える。
+- 人数スケーリング：4人専用なら調整は単純だが、2〜4人対応にするなら、場のカード枚数・資源量を人数で変える、2人時は2対2のダミー／2人チーム戦にする、などの検討が必要。テストは最少・最多人数の両方で行う。
+
+### Gaps
+- Alex Jaffe の講演原典（GDC「Cursed Problems in Game Design」とされる）は直接確認していない。
+- Garfield の kingmaking エッセイ原文、および『Characteristics of Games』の多人数章の本文は未取得。
+- 4人ゲームのダウンタイム許容量（何分までなら不満が出ないか）を示す定量データは見つからなかった。
+- 2対2チーム戦の設計原則を体系的に論じた一次資料（デザイナーの著作）は見つからず、主にレビュー・フォーラムに基づく。
