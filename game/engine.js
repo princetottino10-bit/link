@@ -177,28 +177,70 @@
     return f;
   }
 
-  function canFaceUp(D, state, bi, c) {
+  // 表向きにできない理由。できるなら null。
+  // { code: 'faction', tags } 派閥が基地の表向き可に含まれない / { code: 'barrier', seat } 他人の結界
+  function faceUpBlock(D, state, bi, c) {
     const bdef = D.bases[state.bases[bi].id];
-    if (!bdef.tags.includes(cardDef(D, c).faction)) return false;
-    const blocked = state.bases[bi].stacks.some((st, s) => s !== c.owner && st.some(x => x.faceUp && x.cid === 't5'));
-    return !blocked;
+    if (!bdef.tags.includes(cardDef(D, c).faction)) return { code: 'faction', tags: bdef.tags.slice() };
+    const s = state.bases[bi].stacks.findIndex((st, s) => s !== c.owner && st.some(x => x.faceUp && x.cid === 't5'));
+    return s >= 0 ? { code: 'barrier', seat: s } : null;
   }
+  function canFaceUp(D, state, bi, c) { return faceUpBlock(D, state, bi, c) === null; }
 
   function log(state, msg) { state.log.push(`R${state.round}: ${msg}`); }
+  function event(state, e) { (state.events || (state.events = [])).push(Object.assign({ round: state.round }, e)); }
+  // ログ用のカード名。裏向きは中身を出さない
+  function nameOf(D, c) { return c.faceUp ? `「${D.cards[c.cid].name}」` : '裏向きカード'; }
+  function baseName(D, state, bi) { return D.bases[state.bases[bi].id].name; }
 
   // ---------- 効果 ----------
   // ctx: { D, rand, chooser }
-  function returnToHand(state, f) {
+  function returnToHand(D, state, f) {
     const c = f.card;
+    log(state, `P${c.owner + 1} の${nameOf(D, c)}が手札に戻った @${baseName(D, state, f.bi)}`);
     state.bases[f.bi].stacks[f.s].splice(f.i, 1);
     c.faceUp = false;
     state.players[c.owner].hand.push(c);
   }
 
-  function moveCard(state, f, toBi) {
+  function moveCard(D, state, f, toBi) {
     const c = f.card;
+    log(state, `P${c.owner + 1} の${nameOf(D, c)}が移動 ${baseName(D, state, f.bi)}→${baseName(D, state, toBi)}`);
     state.bases[f.bi].stacks[f.s].splice(f.i, 1);
     state.bases[toBi].stacks[c.owner].push(c);
+  }
+
+  function flipDown(D, state, c) {
+    const f = findCard(state, c.uid);
+    log(state, `P${c.owner + 1} の「${D.cards[c.cid].name}」が裏向きになった @${baseName(D, state, f.bi)}`);
+    c.faceUp = false;
+  }
+
+  function drawLog(state, seat, n, rand) {
+    const before = state.players[seat].hand.length;
+    draw(state, seat, n, rand);
+    const got = state.players[seat].hand.length - before;
+    if (got) log(state, `P${seat + 1} が${got}枚引いた`);
+  }
+
+  function recoverOne(ctx, state, seat) {
+    const p = state.players[seat];
+    const t = choose(ctx, state, seat, 'recover', p.trash.map(x => x.uid), {});
+    if (t == null) return;
+    const i = p.trash.findIndex(x => x.uid === t);
+    const x = p.trash.splice(i, 1)[0];
+    p.hand.push(x);
+    log(state, `P${seat + 1} が捨て札から「${ctx.D.cards[x.cid].name}」を手札に加えた`);
+  }
+
+  function playFromHandDown(D, state, seat, uid, bi) {
+    const p = state.players[seat];
+    const i = p.hand.findIndex(h => h.uid === uid);
+    const h = p.hand.splice(i, 1)[0];
+    h.faceUp = false;
+    state.bases[bi].stacks[seat].push(h);
+    log(state, `P${seat + 1} が手札1枚を裏向きで追加で出した @${baseName(D, state, bi)}`);
+    return h;
   }
 
   function otherBases(state, bi) {
@@ -215,7 +257,9 @@
     if (!p.hand.length) return;
     const pick = choose(ctx, state, seat, 'discard', p.hand.map(c => c.uid), {});
     const i = p.hand.findIndex(c => c.uid === pick);
-    p.trash.push(p.hand.splice(i, 1)[0]);
+    const c = p.hand.splice(i, 1)[0];
+    p.trash.push(c);
+    log(state, `P${seat + 1} が「${ctx.D.cards[c.cid].name}」を捨てた`);
   }
 
   function onReveal(ctx, state, c) {
@@ -230,32 +274,36 @@
 
     switch (c.cid) {
       case 'n1': case 'w6': {
-        if (c.cid === 'n1') draw(state, me, 1, rand);
+        if (c.cid === 'n1') drawLog(state, me, 1, rand);
         const opts = othersExposedHere(x => x.faceUp).map(x => x.uid);
         const t = choose(ctx, state, me, 'flipDown', opts, { bi });
-        if (t != null) findCard(state, t).card.faceUp = false;
+        if (t != null) flipDown(D, state, findCard(state, t).card);
         break;
       }
-      case 'r4': case 'a2': draw(state, me, 1, rand); break;
-      case 'w1': draw(state, me, 2, rand); break;
-      case 'w3': draw(state, me, 2, rand); discardOne(ctx, state, me); break;
+      case 'r4': case 'a2': drawLog(state, me, 1, rand); break;
+      case 'w1': drawLog(state, me, 2, rand); break;
+      case 'w3': drawLog(state, me, 2, rand); discardOne(ctx, state, me); break;
       case 'n3': {
         if (fortress(state, state, bi)) break;
         const opts = othersExposedHere(x => cardValue(D, state, bi, x) <= 2).map(x => x.uid);
         const t = choose(ctx, state, me, 'bounce', opts, { bi });
-        if (t != null) returnToHand(state, findCard(state, t));
+        if (t != null) returnToHand(D, state, findCard(state, t));
         break;
       }
       case 'n5': {
         const yes = choose(ctx, state, me, 'smoke', [true, false], { bi });
-        if (yes) { c.faceUp = false; draw(state, me, 2, rand); }
+        if (yes) { flipDown(D, state, c); drawLog(state, me, 2, rand); }
         break;
       }
       case 'n6': {
         const opts = [];
         state.bases.forEach((b, i) => b.stacks[me].forEach(x => { if (!x.faceUp && x !== c) opts.push(x.uid); }));
         const t = choose(ctx, state, me, 'flipUpOwn', opts, { bi });
-        if (t != null) { const f = findCard(state, t); f.card.faceUp = true; p.stats.fu++; onReveal(ctx, state, f.card); }
+        if (t != null) {
+          const f = findCard(state, t); f.card.faceUp = true; p.stats.fu++;
+          log(state, `P${me + 1} の「${D.cards[f.card.cid].name}」が表向きになった @${baseName(D, state, f.bi)}`);
+          onReveal(ctx, state, f.card);
+        }
         break;
       }
       case 'p1': {
@@ -266,7 +314,7 @@
           if (x) otherBases(state, i).filter(j => !fortress(state, state, j)).forEach(j => opts.push([x.uid, j]));
         });
         const t = choose(ctx, state, me, 'move', opts, { bi });
-        if (t) moveCard(state, findCard(state, t[0]), t[1]);
+        if (t) moveCard(D, state, findCard(state, t[0]), t[1]);
         break;
       }
       case 'p3': {
@@ -280,14 +328,14 @@
           });
         });
         const t = choose(ctx, state, me, 'bounce', opts, { bi });
-        if (t != null) returnToHand(state, findCard(state, t));
+        if (t != null) returnToHand(D, state, findCard(state, t));
         break;
       }
       case 'p5': {
         if (fortress(state, state, bi)) break;
         const opts = [null].concat(otherBases(state, bi).filter(j => !fortress(state, state, j)));
         const t = choose(ctx, state, me, 'moveSelf', opts, { bi, uid: c.uid });
-        if (t != null) moveCard(state, findCard(state, c.uid), t);
+        if (t != null) moveCard(D, state, findCard(state, c.uid), t);
         break;
       }
       case 'n2': case 'w2': {
@@ -296,26 +344,20 @@
         const opts = [null];
         p.hand.forEach(h => targets.forEach(j => opts.push([h.uid, j])));
         const t = choose(ctx, state, me, 'extraPlay', opts, { bi });
-        if (t) {
-          const i = p.hand.findIndex(h => h.uid === t[0]);
-          const h = p.hand.splice(i, 1)[0];
-          h.faceUp = false;
-          state.bases[t[1]].stacks[me].push(h);
-          p.stats.fd++;
-        }
+        if (t) { playFromHandDown(D, state, me, t[0], t[1]); p.stats.fd++; }
         break;
       }
       case 'r3': {
         if (p.deck.length === 0 && p.trash.length) p.deck = shuffle(p.trash.splice(0), rand);
         if (!p.deck.length) break;
         const top = p.deck.shift();
+        log(state, `P${me + 1} が山札の一番上「${D.cards[top.cid].name}」を公開した`);
         if (D.cards[top.cid].value <= 3) { top.faceUp = false; state.bases[bi].stacks[me].push(top); p.stats.fd++; }
         else p.hand.push(top);
         break;
       }
       case 'z1': {
-        const t = choose(ctx, state, me, 'recover', p.trash.map(x => x.uid), {});
-        if (t != null) { const i = p.trash.findIndex(x => x.uid === t); p.hand.push(p.trash.splice(i, 1)[0]); }
+        recoverOne(ctx, state, me);
         break;
       }
       case 'z3': case 'z4': {
@@ -329,6 +371,7 @@
           const i = p.trash.findIndex(x => x.uid === t[0]);
           const x = p.trash.splice(i, 1)[0];
           x.faceUp = false; state.bases[t[1]].stacks[me].push(x); p.stats.fd++;
+          log(state, `P${me + 1} が捨て札の「${D.cards[x.cid].name}」を裏向きで出した @${baseName(D, state, t[1])}`);
         }
         break;
       }
@@ -337,7 +380,7 @@
         state.bases[bi].stacks.forEach((_, s) => {
           if (s === me) return;
           const x = exposed(state, bi, s);
-          if (x && x.faceUp && !immune(D, state, x, me)) x.faceUp = false;
+          if (x && x.faceUp && !immune(D, state, x, me)) flipDown(D, state, x);
         });
         break;
       }
@@ -345,16 +388,18 @@
         if (fortress(state, state, bi)) break;
         const opts = othersExposedHere(() => true).map(x => x.uid);
         const t = choose(ctx, state, me, 'bounce', opts, { bi });
-        if (t != null) returnToHand(state, findCard(state, t));
+        if (t != null) returnToHand(D, state, findCard(state, t));
         break;
       }
       case 'a3': {
         const t = choose(ctx, state, me, 'terraform', state.bases.map((_, i) => i), { bi });
         const old = state.bases[t];
+        const oldName = D.bases[old.id].name;
         state.baseTrash.push(old.id);
         const fresh = newBaseSlot(state, rand);
         old.id = fresh.id; // カードはそのまま
-        draw(state, me, 1, rand);
+        log(state, `P${me + 1} が基地「${oldName}」を「${D.bases[old.id].name}」に入れ替えた`);
+        drawLog(state, me, 1, rand);
         break;
       }
       case 'w5': {
@@ -365,8 +410,14 @@
           const h = p.hand.splice(i, 1)[0];
           h.faceUp = false;
           state.bases[bi].stacks[me].push(h);
-          if (canFaceUp(D, state, bi, h)) { h.faceUp = true; p.stats.fu++; onReveal(ctx, state, h); }
-          else p.stats.fd++;
+          if (canFaceUp(D, state, bi, h)) {
+            h.faceUp = true; p.stats.fu++;
+            log(state, `P${me + 1} が手札の「${D.cards[h.cid].name}」を表向きで追加で出した @${baseName(D, state, bi)}`);
+            onReveal(ctx, state, h);
+          } else {
+            p.stats.fd++;
+            log(state, `P${me + 1} が手札1枚を裏向きで追加で出した @${baseName(D, state, bi)}`);
+          }
         }
         break;
       }
@@ -381,7 +432,7 @@
           });
         });
         const t = choose(ctx, state, me, 'bounce', opts, { bi });
-        if (t != null) returnToHand(state, findCard(state, t));
+        if (t != null) returnToHand(D, state, findCard(state, t));
         break;
       }
       case 'a6': {
@@ -390,11 +441,11 @@
         othersExposedHere(() => true).forEach(x =>
           otherBases(state, bi).filter(j => !fortress(state, state, j)).forEach(j => opts.push([x.uid, j])));
         const t = choose(ctx, state, me, 'moveOther', opts, { bi });
-        if (t) moveCard(state, findCard(state, t[0]), t[1]);
+        if (t) moveCard(D, state, findCard(state, t[0]), t[1]);
         break;
       }
       case 't1': {
-        draw(state, me, 1, rand);
+        drawLog(state, me, 1, rand);
         const others = state.players.filter(q => q.seat !== me);
         const top = Math.max(...others.map(q => q.vp));
         others.filter(q => q.vp === top).forEach(q => discardOne(ctx, state, q.seat));
@@ -410,7 +461,7 @@
           leaders.forEach(s => { const x = exposed(state, j, s); if (x && !immune(D, state, x, me)) opts.push(x.uid); });
         });
         const t = choose(ctx, state, me, 'bounce', opts, { bi });
-        if (t != null) returnToHand(state, findCard(state, t));
+        if (t != null) returnToHand(D, state, findCard(state, t));
         break;
       }
     }
@@ -436,13 +487,10 @@
       if (final && r === 0) pl.stats.finalFirst++;
     });
     const firsts = Object.keys(ranks).filter(s => ranks[s] === 0).map(Number);
-    if (bdef.id === 'b06') firsts.forEach(s => draw(state, s, 2, rand));
-    if (bdef.id === 'b07') firsts.forEach(s => {
-      const p = state.players[s];
-      const t = choose(ctx, state, s, 'recover', p.trash.map(x => x.uid), {});
-      if (t != null) { const i = p.trash.findIndex(x => x.uid === t); p.hand.push(p.trash.splice(i, 1)[0]); }
-    });
-    if (bdef.id === 'b08') Object.keys(ranks).forEach(s => draw(state, Number(s), 1, rand));
+    log(state, `${bdef.name} 採点${final ? '（最終）' : ''}: ` + Object.keys(ranks).map(s => `P${+s + 1}=${ranks[s] + 1}位(+${gained[s]})`).join(' '));
+    if (bdef.id === 'b06') firsts.forEach(s => drawLog(state, s, 2, rand));
+    if (bdef.id === 'b07') firsts.forEach(s => recoverOne(ctx, state, s));
+    if (bdef.id === 'b08') Object.keys(ranks).forEach(s => drawLog(state, Number(s), 1, rand));
 
     // 破壊時効果（手番順）
     const lastRank = Math.max(...Object.values(ranks));
@@ -456,18 +504,15 @@
             if (final) break;
             const opts = [null].concat(otherBases(state, bi));
             const t = choose(ctx, state, s, 'moveSelf', opts, { bi, uid: c.uid, breaking: true });
-            if (t != null) { const f = findCard(state, c.uid); moveCard(state, f, t); kept.add(c.uid); }
+            if (t != null) { const f = findCard(state, c.uid); moveCard(D, state, f, t); kept.add(c.uid); }
             break;
           }
-          case 'p4': if (ranks[s] !== 0) { pl.vp += 1; gained[s] += 1; } break;
-          case 'p6': if (ranks[s] === 0) { pl.vp += 1; gained[s] += 1; } break;
-          case 'z5': for (let k = 0; k < 2; k++) {
-            const t = choose(ctx, state, s, 'recover', pl.trash.map(x => x.uid), {});
-            if (t != null) { const i = pl.trash.findIndex(x => x.uid === t); pl.hand.push(pl.trash.splice(i, 1)[0]); }
-          } break;
-          case 'd2': draw(state, s, 2, rand); break;
-          case 'a5': { const f = findCard(state, c.uid); if (f) { returnToHand(state, f); kept.add(c.uid); } break; }
-          case 't4': if (ranks[s] === lastRank && Object.keys(ranks).length > 1) { const d = (bdef.vp[0] || 0) - (bdef.vp[ranks[s]] || 0); pl.vp += d; gained[s] += d; } break;
+          case 'p4': if (ranks[s] !== 0) { pl.vp += 1; gained[s] += 1; log(state, `P${s + 1} 略奪者で+1VP`); } break;
+          case 'p6': if (ranks[s] === 0) { pl.vp += 1; gained[s] += 1; log(state, `P${s + 1} 船長で+1VP`); } break;
+          case 'z5': for (let k = 0; k < 2; k++) recoverOne(ctx, state, s); break;
+          case 'd2': drawLog(state, s, 2, rand); break;
+          case 'a5': { const f = findCard(state, c.uid); if (f) { returnToHand(D, state, f); kept.add(c.uid); } break; }
+          case 't4': if (ranks[s] === lastRank && Object.keys(ranks).length > 1) { const d = (bdef.vp[0] || 0) - (bdef.vp[ranks[s]] || 0); pl.vp += d; gained[s] += d; log(state, `P${s + 1} 大逆転で+${d}VP`); } break;
         }
       });
     });
@@ -481,11 +526,14 @@
       base.stacks[s] = [];
     });
     state.breaks++;
-    log(state, `${bdef.name} 採点: ` + Object.keys(ranks).map(s => `P${+s + 1}=${ranks[s] + 1}位(+${gained[s]})`).join(' '));
+    const rankList = {};
+    Object.keys(ranks).forEach(k => { rankList[k] = ranks[k]; });
+    event(state, { type: 'score', bi, baseId: base.id, ranks: rankList, gained: Object.assign({}, gained), final });
     if (!final) {
       state.baseTrash.push(base.id);
       const fresh = newBaseSlot(state, rand);
       base.id = fresh.id;
+      log(state, `新しい基地「${D.bases[base.id].name}」が出た`);
     }
   }
 
@@ -512,18 +560,14 @@
       const p = state.players[s];
       if (a.type === 'refresh') {
         const target = state.bases.some((b, i) => activeStatic(D, state, i, s, 'w4')) ? 6 : HAND_REFRESH;
-        if (p.hand.length < HAND_REFRESH) draw(state, s, HAND_REFRESH - p.hand.length, rand);
+        log(state, `P${s + 1} リフレッシュ`);
+        if (p.hand.length < HAND_REFRESH) drawLog(state, s, HAND_REFRESH - p.hand.length, rand);
         if (target > HAND_REFRESH && p.hand.length) {
           const opts = [null];
           p.hand.forEach(h => state.bases.forEach((_, j) => opts.push([h.uid, j])));
           const t = choose(ctx, state, s, 'extraPlay', opts, {});
-          if (t) {
-            const i = p.hand.findIndex(h => h.uid === t[0]);
-            const h = p.hand.splice(i, 1)[0];
-            h.faceUp = false; state.bases[t[1]].stacks[s].push(h); p.stats.fd++;
-          }
+          if (t) { playFromHandDown(D, state, s, t[0], t[1]); p.stats.fd++; }
         }
-        log(state, `P${s + 1} リフレッシュ`);
         continue;
       }
       const f = findCard(state, a.uid);
@@ -558,6 +602,51 @@
       state.startPlayer = (state.startPlayer + 1) % n;
     }
   }
+
+  // ---------- 選択待ちで止まれるラウンド実行（画面用） ----------
+  // before: ラウンド開始時の状態（変更しない）。actions: 各席の行動。answers: これまでの選択の答え（出てきた順）。
+  // auto(state, seat, kind, options, info): ボットの席なら答えを返し、人間の席なら undefined を返す。
+  // 乱数はラウンドごとにシードから作り直すので、同じ before・actions・answers からは必ず同じ結果になる。
+  // 未回答の選択に来たら、その直前の状態と pending { seat, kind, options, info } を返して止まる。
+  // 答えを answers に足してもう一度呼べば続きから進む（最初から再実行して同じ所まで来る）。
+  function roundRand(state) { return rng((state.seed + Math.imul(state.round, 0x9E3779B1)) >>> 0); }
+
+  function resolveRound(D, before, actions, answers, auto) {
+    const state = clone(before);
+    const given = answers.slice();
+    const PAUSE = {};
+    let k = 0, pending = null, paused = null;
+    const chooser = (st, seat, kind, options, info) => {
+      if (k < given.length) {
+        const a = given[k++];
+        if (!options.some(o => JSON.stringify(o) === JSON.stringify(a))) throw new Error(`選択の再現に失敗しました（${kind}）`);
+        return a;
+      }
+      const a = auto ? auto(st, seat, kind, options, info || {}) : undefined;
+      if (a !== undefined) { given.push(a); k++; return a; }
+      pending = { seat, kind, options, info: info || {} };
+      paused = clone(st);
+      throw PAUSE;
+    };
+    try {
+      playRound({ D, rand: roundRand(before), chooser }, state, clone(actions));
+    } catch (e) {
+      if (e !== PAUSE) throw e;
+      return { state: paused, answers: given, pending };
+    }
+    return { state, answers: given, pending: null };
+  }
+
+  // いま採点したら各席が得る VP（基地の順位 VP のみ。破壊時効果は含めない）
+  function projectedVP(D, state, bi) {
+    const ranks = ranking(D, state, bi);
+    const vp = D.bases[state.bases[bi].id].vp;
+    const out = {};
+    Object.keys(ranks).forEach(s => { out[s] = vp[ranks[s]] || 0; });
+    return out;
+  }
+
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
   function objectiveMet(state, p) {
     const st = p.stats;
@@ -601,7 +690,8 @@
   const api = {
     ROUNDS, HAND_REFRESH, HAND_LIMIT, BASES_IN_PLAY,
     rng, shuffle, indexData, setup, playRound, viewFor,
-    cardValue, totals, baseTotal, ranking, canFaceUp, findCard, exposed, onReveal, draw,
+    cardValue, totals, baseTotal, ranking, canFaceUp, faceUpBlock, findCard, exposed, onReveal, draw,
+    resolveRound, projectedVP, objectiveMet,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Engine = api;
