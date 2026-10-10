@@ -477,3 +477,7 @@ details.panel summary { font-weight: 700; cursor: pointer; }
 .tut-dots span.on { background: var(--ink); }
 .tut-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
 .tut .base { pointer-events: none; }
+.auto-banner { display: grid; gap: 8px; padding: 12px 14px; background: var(--hl); border: var(--line); border-radius: var(--r-m); box-shadow: var(--shadow); }
+.auto-banner p { margin: 0; font-size: 14px; }
+.my-fac { margin: 6px 0 0; font-size: 14px; }
+.my-fac .dim { display: block; font-size: 12px; }

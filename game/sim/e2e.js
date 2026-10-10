@@ -4,6 +4,7 @@
 //   2. npm i playwright（どこかに）してから
 //      node game/sim/e2e.js [url] [人間の席=0,1] [スクショ保存先]
 //   既存の Chromium を使うときは環境変数 PW_CHROMIUM に chrome.exe のパスを入れる。
+//   E2E_AUTO=1 にすると、ドラフトを「おまかせ」で済ませる。
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -62,7 +63,10 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
   for (; steps < 5000; steps++) {
     const sc = await screen();
     if (sc === 'final') break;
-    if (sc === 'draft') {
+    if (sc === 'draft' && process.env.E2E_AUTO && await count('[data-act="draft-auto"]')) {
+      await shot('02-draft', true);
+      await click('[data-act="draft-auto"]');
+    } else if (sc === 'draft') {
       if (await count('[data-act="draft-focus"]') && !(await count('.botnote'))) {
         await page.locator('[data-act="draft-focus"]').nth(Math.floor(rand() * await count('[data-act="draft-focus"]'))).click();
         await shot('02-draft', true);

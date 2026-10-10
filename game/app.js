@@ -78,7 +78,7 @@
   // ---------- ドラフト ----------
   function draftSeat() { return DRAFT_ORDER[App.S.draft.step]; }
 
-  function draftPick(f) {
+  function takeFaction(f) {
     const dr = App.S.draft;
     if (!dr.pool.includes(f)) return;
     dr.picks[draftSeat()].push(f);
@@ -86,14 +86,29 @@
     dr.step++;
     App.T.draftFocus = null;
     if (dr.step >= DRAFT_ORDER.length) beginGame();
+  }
+
+  function draftPick(f) {
+    takeFaction(f);
     commit();
+  }
+
+  function randomFaction() {
+    const dr = App.S.draft;
+    const rand = E.rng(App.S.seed + dr.step * 101);
+    return dr.pool[Math.floor(rand() * dr.pool.length)];
   }
 
   function botDraftPick() {
     if (!App.S || App.S.screen !== 'draft' || App.S.gate) return;
-    const dr = App.S.draft;
-    const rand = E.rng(App.S.seed + dr.step * 101);
-    draftPick(dr.pool[Math.floor(rand() * dr.pool.length)]);
+    draftPick(randomFaction());
+  }
+
+  // おまかせ：残りのドラフトを全員ぶん自動で決める
+  function autoDraft() {
+    clearTimeout(botTimer);
+    while (App.S.screen === 'draft' && App.S.draft.step < DRAFT_ORDER.length) takeFaction(randomFaction());
+    commit();
   }
 
   // ---------- 秘密の目標を配る ----------
@@ -274,6 +289,7 @@
       case 'again': { const names = S.names, bots = S.bots; clearSaved(); startGame(names, bots); return; }
       case 'title': clearTimeout(botTimer); clearSaved(); App.S = null; App.T = freshTransient(); break;
       case 'draft-focus': T.draftFocus = T.draftFocus === el.dataset.f ? null : el.dataset.f; break;
+      case 'draft-auto': autoDraft(); return;
       case 'draft-pick': if (!S.bots[draftSeat()]) { draftPick(el.dataset.f); return; } break;
       case 'gate-ok': {
         const g = S.gate; S.gate = null;

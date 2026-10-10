@@ -109,6 +109,8 @@
       <header class="phase-head"><p class="kicker">準備 ・ 派閥ドラフト ${dr.step + 1}/8</p>
         <h1>${seatBadge(seat)} ${esc(S.names[seat])}さんが選ぶ番${isBot ? '<span class="botnote">（ボットが選んでいます…）</span>' : ''}</h1>
         <ol class="draft-order" aria-label="指名順">${order}</ol></header>
+      <section class="auto-banner"><p><b>はじめてなら「おまかせ」がおすすめ。</b>派閥（カードの組）を自動で決めて、すぐ始める。</p>
+        <button type="button" class="btn primary" data-act="draft-auto">おまかせで決める</button></section>
       <ul class="draft-picks">${picks}</ul>
       <p class="hint">派閥をタップすると、カード 6 枚と特徴が見られる。2 つの派閥を混ぜて 12 枚の山札にする。</p>
       <div class="ftiles">${tiles}</div>
@@ -125,7 +127,8 @@
     return `<main class="screen deal-screen">
       <header class="phase-head"><p class="kicker">準備 ・ 秘密の目標</p><h1>${seatBadge(seat, S.names)}さんの目標</h1></header>
       <article class="objective-card"><p class="oc-kicker">秘密の目標 ・ 達成で +${o.vp}VP</p><h2>${esc(o.name)}</h2><p>${esc(o.text)}</p></article>
-      <p class="hint">あなたの派閥：${p.factions.map(f => factionChip(D, f)).join('')}</p>
+      <section class="panel"><h2 class="panel-h">あなたの派閥（山札の中身）</h2>
+        ${p.factions.map(f => `<p class="my-fac">${factionChip(D, f)}${esc(D.factions[f].good)}。<span class="dim">勝ち筋：${esc(D.factions[f].win)}</span></p>`).join('')}</section>
       <p class="hint">目標はゲーム中いつでも、自分の番の画面上の「目標」から見直せる。</p>
       <button type="button" class="btn primary big" data-act="deal-ok">覚えた（隠して次へ）</button>
     </main>`;
