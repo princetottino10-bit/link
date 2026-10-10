@@ -40,6 +40,8 @@
   // ---------- 共通 ----------
   const humans = () => App.S.bots.map((b, s) => b ? -1 : s).filter(s => s >= 0);
   const multiHuman = () => humans().length > 1;
+  // 再生や盤面をだれの目線で見せるか（人間が 1 人ならその人、複数なら公開情報だけ）
+  const publicViewer = () => (humans().length === 1 ? humans()[0] : -1);
 
   // 端末を seat の人に渡す必要があれば目隠し画面を出す
   function handTo(seat, purpose) {
@@ -153,7 +155,7 @@
   // ---------- ラウンド：公開と効果の解決 ----------
   function goResolve() {
     const S = App.S;
-    S.res = { before: S.game, actions: S.plan.actions, botUp: S.plan.botUp, answers: [], pending: null, mid: null };
+    S.res = { before: S.game, actions: S.plan.actions, botUp: S.plan.botUp, answers: [], pending: null, mid: null, frames: [], shown: 0, done: null };
     S.plan = null;
     S.screen = 'resolve';
     step();
@@ -175,26 +177,46 @@
     const S = App.S, res = S.res;
     let r;
     try {
-      r = E.resolveRound(App.D, res.before, res.actions, res.answers, autoAnswerer(res));
+      r = E.resolveRound(App.D, res.before, res.actions, res.answers, autoAnswerer(res), { trace: true });
     } catch (e) {
       App.T.error = `ラウンドの処理でエラーが起きました：${e && e.message ? e.message : e}`;
       res.pending = null;
       return;
     }
     res.answers = r.answers;
+    res.frames = r.frames;
+    res.pending = r.pending;
+    res.mid = r.pending ? r.state : null;
+    res.done = r.pending ? null : r.state;
     App.T.pick = null; App.T.pickCard = null;
-    if (r.pending) {
-      res.pending = r.pending;
-      res.mid = r.state;
-      if (SECRET_KINDS.includes(r.pending.kind)) handTo(r.pending.seat, 'resolve');
+    afterPlayback();
+  }
+
+  // 公開の再生が追いついたら、次の選択（または結果画面）へ進む
+  function afterPlayback() {
+    const S = App.S, res = S.res;
+    if (res.shown < groupCount(res)) return;
+    if (res.pending) {
+      if (SECRET_KINDS.includes(res.pending.kind)) handTo(res.pending.seat, 'resolve');
       else S.holder = null;
       return;
     }
-    S.result = { before: res.before, after: r.state };
-    S.game = r.state;
+    S.result = { before: res.before, after: res.done };
+    S.game = res.done;
     S.res = null;
     S.holder = null;
     S.screen = 'result';
+  }
+
+  function groupCount(res) { return window.UI.groupFrames(res.frames).length; }
+
+  function replay(skip) {
+    const res = App.S.res;
+    if (!res) return;
+    res.shown = skip ? groupCount(res) : res.shown + 1;
+    App.T.replayAll = false;
+    afterPlayback();
+    commit();
   }
 
   function answer() {
@@ -208,7 +230,7 @@
   function retryRound() {
     const S = App.S;
     if (!S.res) return;
-    S.res.answers = []; S.res.pending = null;
+    S.res.answers = []; S.res.pending = null; S.res.done = null;
     App.T.error = null;
     step();
     commit();
@@ -268,6 +290,10 @@
       case 'opt-card': T.pickCard = num('uid'); T.pick = null; break;
       case 'answer': answer(); return;
       case 'retry': retryRound(); return;
+      case 'replay-next': replay(false); return;
+      case 'replay-skip': replay(true); return;
+      case 'replay-all': T.replayAll = !T.replayAll; break;
+      case 'help': T.modal = { type: 'help' }; break;
       case 'next': nextFromResult(); return;
       case 'card': T.modal = { type: 'card', uid: num('uid'), bi: num('bi') }; break;
       case 'objective': T.modal = { type: 'objective', seat: num('seat') }; break;
@@ -312,6 +338,7 @@
   App.draftSeat = draftSeat;
   App.SECRET_KINDS = SECRET_KINDS;
   App.loadSaved = loadSaved;
+  App.publicViewer = () => publicViewer();
   App.DRAFT_ORDER = DRAFT_ORDER;
 
   boot();

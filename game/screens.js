@@ -185,6 +185,77 @@
   };
 
   function resolve(App) {
+    const S = App.S, res = S.res;
+    const groups = UI.groupFrames(res.frames);
+    if (res.shown < groups.length) return replay(App, groups);
+    return choice(App);
+  }
+
+  // ---------- 公開の再生（1 人分ずつ） ----------
+  function replay(App, groups) {
+    const S = App.S, D = App.D, T = App.T, res = S.res;
+    const g = groups[res.shown];
+    const m = g.head.meta || {};
+    const shownState = replayState(g);
+    const viewer = App.publicViewer();
+    const view = E.viewFor(shownState, viewer);
+    const name = s => `<span class="lname s${s}">${UI.SEAT_MARKS[s]}${esc(S.names[s])}</span>`;
+    let title = '', body = '', focus = null, hl = [];
+    if (m.kind === 'reveal') {
+      const f = E.findCard(shownState, m.uid);
+      focus = f ? f.bi : m.bi;
+      hl = [m.uid];
+      const c = (f && f.card) || null;
+      const baseNm = esc(D.bases[g.head.state.bases[m.bi].id].name);
+      if (m.up) {
+        const def = D.cards[E.findCard(g.head.state, m.uid).card.cid];
+        title = `${name(m.seat)} が<b>「${esc(def.name)}」</b>を表で公開`;
+        body = `<div class="reveal-card f-${def.faction}"><span class="rc-val">${def.value}</span><div><b>${esc(def.name)}</b>` +
+          `<small>${baseNm} に置いた ・ ${esc(D.factions[def.faction].name)}</small><p>${esc(def.text)}</p></div></div>`;
+      } else {
+        const mine = viewer === m.seat && c && c.cid;
+        title = `${name(m.seat)} は<b>裏向きのまま</b>公開`;
+        body = `<p class="rp-note">${baseNm} に置いた。裏向きは値 2・効果なし。中身は本人だけが知っている${mine ? `（あなたのカード：「${esc(D.cards[c.cid].name)}」）` : ''}。</p>`;
+      }
+    } else if (m.kind === 'refresh') {
+      title = `${name(m.seat)} は<b>リフレッシュ</b>`;
+      body = '<p class="rp-note">カードを置かず、手札が 5 枚になるまで引いた。</p>';
+    } else if (m.kind === 'gone') {
+      title = `${name(m.seat)} のカードは公開前に手札に戻された`;
+    } else if (m.kind === 'score') {
+      focus = m.bi;
+      const bdef = D.bases[m.baseId];
+      const ranks = E.ranking(D, g.head.state, m.bi);
+      const order = Object.keys(ranks).map(Number).sort((a, b) => ranks[a] - ranks[b]);
+      title = `<b>${esc(bdef.name)}</b> が${m.final ? '最終' : ''}採点された！`;
+      body = `<p class="rp-note">${m.final ? '最終ラウンドなので、カードの残っている基地はすべて採点。' : `基地の合計が耐久値 ${bdef.bp} に届いた。`}順位ごとに VP が入る。</p>` +
+        `<ol class="rp-ranks">${order.map(s2 => `<li class="r${ranks[s2]}"><span class="rk">${ranks[s2] + 1}位</span>${name(s2)}<span class="gain">+${bdef.vp[ranks[s2]] || 0}</span></li>`).join('')}</ol>`;
+    }
+    const after = g.rest.map(f => `<li>${UI.nameize(f.state.log[f.line], S.names)}</li>`).join('');
+    const boardHtml = T.replayAll || focus == null
+      ? (T.replayAll ? UI.board(D, E, view, { viewer: viewer >= 0 ? viewer : null, highlight: hl }) : '')
+      : UI.baseBlock(D, E, view, focus, { viewer: viewer >= 0 ? viewer : null, highlight: hl });
+    return `${UI.playersBar(view, S.names, { viewer: viewer >= 0 ? viewer : null, phase: '公開フェーズ' })}
+      <main class="screen play-screen replay-screen">
+        <section class="rp-card${m.kind === 'score' ? ' is-score' : ''}" aria-live="polite">
+          <p class="kicker">ラウンド ${res.before.round} ・ ${m.kind === 'score' ? '採点' : '公開'}（${res.shown + 1}/${groups.length}）</p>
+          <h2 class="rp-title">${title}</h2>${body}
+          ${after ? `<p class="rp-sub">その結果</p><ul class="rp-after">${after}</ul>` : ''}
+        </section>
+        ${boardHtml}
+        <button type="button" class="btn ghost small" data-act="replay-all">${T.replayAll ? 'この基地だけ見る' : 'ほかの基地も見る'}</button>
+      </main>
+      <footer class="dock"><div class="dock-actions">
+        <button type="button" class="btn" data-act="replay-skip">最後まで飛ばす</button>
+        <button type="button" class="btn primary" data-act="replay-next">次へ ▶</button></div></footer>`;
+  }
+
+  function replayState(g) {
+    const last = g.rest.length ? g.rest[g.rest.length - 1] : g.head;
+    return g.head.meta && g.head.meta.kind === 'score' ? g.head.state : last.state;
+  }
+
+  function choice(App) {
     const S = App.S, D = App.D, res = S.res;
     const p = res.pending;
     if (!p) return `<main class="screen"><p>処理中…</p></main>`;
@@ -363,6 +434,13 @@
     const S = App.S;
     if (!S) return null;
     if (S.screen === 'plan' && S.plan) return { view: E.viewFor(S.game, S.plan.order[S.plan.idx]), viewer: S.plan.order[S.plan.idx] };
+    if (S.screen === 'resolve' && S.res) {
+      const groups = UI.groupFrames(S.res.frames);
+      if (S.res.shown < groups.length) {
+        const v = App.publicViewer();
+        return { view: E.viewFor(replayState(groups[S.res.shown]), v), viewer: v >= 0 ? v : null };
+      }
+    }
     if (S.screen === 'resolve' && S.res && S.res.pending) {
       const p = S.res.pending, secret = App.SECRET_KINDS.includes(p.kind);
       return { view: E.viewFor(S.res.mid, secret ? p.seat : -1), viewer: secret ? p.seat : null };
@@ -377,7 +455,9 @@
     if (!S || S.gate) return '';
     const cv = currentView(App);
     let inner = '';
-    if (T.logOpen && cv) {
+    if (T.modal && T.modal.type === 'help') {
+      inner = HELP;
+    } else if (T.logOpen && cv) {
       inner = `<h2 class="sheet-h">行動ログ</h2>${UI.logList(cv.view.log, S.names)}`;
     } else if (T.modal && T.modal.type === 'objective' && cv && cv.viewer === T.modal.seat) {
       const o = D.objectives[S.game.players[T.modal.seat].objective];
@@ -393,6 +473,14 @@
     return `<div class="overlay" data-act="close"><div class="sheet" role="dialog" aria-modal="true">${inner}` +
       `<button type="button" class="btn sheet-close" data-act="close">閉じる</button></div></div>`;
   }
+
+  const HELP = `<h2 class="sheet-h">ざっくりルール</h2><ol class="help">
+    <li><b>毎ラウンド</b>：全員が同時に、手札 1 枚を好きな基地に<b>伏せて</b>置く（またはリフレッシュで手札を 5 枚まで補充）。</li>
+    <li><b>公開</b>：「先」マークの人から順に公開。基地の「表OK」の派閥なら<b>表</b>にできて効果が出る。<b>裏</b>のままなら値 2・効果なし。</li>
+    <li><b>採点</b>：基地の合計が耐久値（右上の 7/11 の 11）に届くと採点。自分の列の合計が多い順に 1〜4 位の VP がもらえる。</li>
+    <li>各基地の列の上の数字が自分の合計、その下が<b>今採点されたら</b>の順位と VP。</li>
+    <li><b>8 ラウンド</b>で終わり。最後に全部の基地を採点し、秘密の目標（達成で +3）を足して VP が多い人の勝ち。</li>
+    <li>カードをタップすると効果文が大きく出る。上の「ログ」で今までの出来事が見られる。</li></ol>`;
 
   function loadError(msg) {
     return `<main class="screen load-error"><h1>カードデータを読み込めませんでした</h1><p>${esc(msg)}</p>

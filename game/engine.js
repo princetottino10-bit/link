@@ -187,7 +187,15 @@
   }
   function canFaceUp(D, state, bi, c) { return faceUpBlock(D, state, bi, c) === null; }
 
-  function log(state, msg) { state.log.push(`R${state.round}: ${msg}`); }
+  // meta は画面の再生用（どのカード・どの基地の出来事か）。state._trace があるときだけ、その時点の盤面ごと記録する
+  function log(state, msg, meta) {
+    state.log.push(`R${state.round}: ${msg}`);
+    if (!state._trace) return;
+    const trace = state._trace;
+    delete state._trace;
+    trace.push({ line: state.log.length - 1, meta: meta || null, state: clone(state) });
+    state._trace = trace;
+  }
   function event(state, e) { (state.events || (state.events = [])).push(Object.assign({ round: state.round }, e)); }
   // ログ用のカード名。裏向きは中身を出さない
   function nameOf(D, c) { return c.faceUp ? `「${D.cards[c.cid].name}」` : '裏向きカード'; }
@@ -197,7 +205,7 @@
   // ctx: { D, rand, chooser }
   function returnToHand(D, state, f) {
     const c = f.card;
-    log(state, `P${c.owner + 1} の${nameOf(D, c)}が手札に戻った @${baseName(D, state, f.bi)}`);
+    log(state, `P${c.owner + 1} の${nameOf(D, c)}が手札に戻った @${baseName(D, state, f.bi)}`, { kind: 'bounce', uid: c.uid, bi: f.bi });
     state.bases[f.bi].stacks[f.s].splice(f.i, 1);
     c.faceUp = false;
     state.players[c.owner].hand.push(c);
@@ -205,15 +213,16 @@
 
   function moveCard(D, state, f, toBi) {
     const c = f.card;
-    log(state, `P${c.owner + 1} の${nameOf(D, c)}が移動 ${baseName(D, state, f.bi)}→${baseName(D, state, toBi)}`);
+    const msg = `P${c.owner + 1} の${nameOf(D, c)}が移動 ${baseName(D, state, f.bi)}→${baseName(D, state, toBi)}`;
     state.bases[f.bi].stacks[f.s].splice(f.i, 1);
     state.bases[toBi].stacks[c.owner].push(c);
+    log(state, msg, { kind: 'move', uid: c.uid, bi: toBi });
   }
 
   function flipDown(D, state, c) {
     const f = findCard(state, c.uid);
-    log(state, `P${c.owner + 1} の「${D.cards[c.cid].name}」が裏向きになった @${baseName(D, state, f.bi)}`);
     c.faceUp = false;
+    log(state, `P${c.owner + 1} の「${D.cards[c.cid].name}」が裏向きになった @${baseName(D, state, f.bi)}`, { kind: 'flip', uid: c.uid, bi: f.bi });
   }
 
   function drawLog(state, seat, n, rand) {
@@ -487,7 +496,8 @@
       if (final && r === 0) pl.stats.finalFirst++;
     });
     const firsts = Object.keys(ranks).filter(s => ranks[s] === 0).map(Number);
-    log(state, `${bdef.name} 採点${final ? '（最終）' : ''}: ` + Object.keys(ranks).map(s => `P${+s + 1}=${ranks[s] + 1}位(+${gained[s]})`).join(' '));
+    log(state, `${bdef.name} 採点${final ? '（最終）' : ''}: ` + Object.keys(ranks).map(s => `P${+s + 1}=${ranks[s] + 1}位(+${gained[s]})`).join(' '),
+      { kind: 'score', bi, baseId: base.id, final });
     if (bdef.id === 'b06') firsts.forEach(s => drawLog(state, s, 2, rand));
     if (bdef.id === 'b07') firsts.forEach(s => recoverOne(ctx, state, s));
     if (bdef.id === 'b08') Object.keys(ranks).forEach(s => drawLog(state, Number(s), 1, rand));
@@ -560,7 +570,7 @@
       const p = state.players[s];
       if (a.type === 'refresh') {
         const target = state.bases.some((b, i) => activeStatic(D, state, i, s, 'w4')) ? 6 : HAND_REFRESH;
-        log(state, `P${s + 1} リフレッシュ`);
+        log(state, `P${s + 1} リフレッシュ`, { kind: 'refresh', seat: s });
         if (p.hand.length < HAND_REFRESH) drawLog(state, s, HAND_REFRESH - p.hand.length, rand);
         if (target > HAND_REFRESH && p.hand.length) {
           const opts = [null];
@@ -571,16 +581,16 @@
         continue;
       }
       const f = findCard(state, a.uid);
-      if (!f) { log(state, `P${s + 1} のカードは公開前に戻された`); continue; }
+      if (!f) { log(state, `P${s + 1} のカードは公開前に戻された`, { kind: 'gone', seat: s }); continue; }
       let up = false;
       if (canFaceUp(D, state, f.bi, f.card)) up = choose(ctx, state, s, 'faceUp', [true, false], { bi: f.bi, uid: a.uid });
       if (up) {
         f.card.faceUp = true; p.stats.fu++;
-        log(state, `P${s + 1} ${D.cards[f.card.cid].name} を表で公開 @${D.bases[state.bases[f.bi].id].name}`);
+        log(state, `P${s + 1} ${D.cards[f.card.cid].name} を表で公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid: f.card.uid, bi: f.bi, up: true });
         onReveal(ctx, state, f.card);
       } else {
         p.stats.fd++;
-        log(state, `P${s + 1} 裏向きで公開 @${D.bases[state.bases[f.bi].id].name}`);
+        log(state, `P${s + 1} 裏向きで公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid: f.card.uid, bi: f.bi, up: false });
       }
     }
     // 3. 破壊チェック
@@ -609,10 +619,14 @@
   // 乱数はラウンドごとにシードから作り直すので、同じ before・actions・answers からは必ず同じ結果になる。
   // 未回答の選択に来たら、その直前の状態と pending { seat, kind, options, info } を返して止まる。
   // 答えを answers に足してもう一度呼べば続きから進む（最初から再実行して同じ所まで来る）。
+  // opts.trace が true なら、ログ 1 行ごとの盤面 frames [{ line, meta, state }] も返す（公開の再生用）。
   function roundRand(state) { return rng((state.seed + Math.imul(state.round, 0x9E3779B1)) >>> 0); }
 
-  function resolveRound(D, before, actions, answers, auto) {
+  function resolveRound(D, before, actions, answers, auto, opts) {
     const state = clone(before);
+    const frames = [];
+    if (opts && opts.trace) state._trace = frames;
+    const untrace = st => { const c = clone(Object.assign({}, st, { _trace: undefined })); delete c._trace; return c; };
     const given = answers.slice();
     const PAUSE = {};
     let k = 0, pending = null, paused = null;
@@ -625,16 +639,17 @@
       const a = auto ? auto(st, seat, kind, options, info || {}) : undefined;
       if (a !== undefined) { given.push(a); k++; return a; }
       pending = { seat, kind, options, info: info || {} };
-      paused = clone(st);
+      paused = untrace(st);
       throw PAUSE;
     };
     try {
       playRound({ D, rand: roundRand(before), chooser }, state, clone(actions));
     } catch (e) {
       if (e !== PAUSE) throw e;
-      return { state: paused, answers: given, pending };
+      return { state: paused, answers: given, pending, frames };
     }
-    return { state, answers: given, pending: null };
+    delete state._trace;
+    return { state, answers: given, pending: null, frames };
   }
 
   // いま採点したら各席が得る VP（基地の順位 VP のみ。破壊時効果は含めない）

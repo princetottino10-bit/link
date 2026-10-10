@@ -431,3 +431,19 @@ details.panel summary { font-weight: 700; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- 公開の再生 ---------- */
+.rp-card { display: grid; gap: 8px; padding: 14px; background: var(--card); border: 3px solid var(--ink); border-radius: var(--r-m); box-shadow: 5px 5px 0 var(--ink); animation: pop 260ms var(--ease) both; }
+.rp-card.is-score { background: var(--hl); box-shadow: 5px 5px 0 var(--pink); }
+.rp-title { font-size: 19px; font-weight: 700; line-height: 1.45; }
+.rp-title b { font-family: var(--font-disp); font-weight: 400; }
+.rp-note { margin: 0; font-size: 14px; color: var(--ink-2); }
+.rp-sub { margin: 4px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--ink-2); }
+.rp-after { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 2px; }
+.rp-ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.rp-ranks li { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--r-s); background: var(--card); border: 1.5px solid var(--ink); }
+.rp-ranks li.r0 { box-shadow: var(--shadow-s); font-weight: 700; }
+.replay-screen .mini.is-selected { outline-width: 4px; animation: pulse 900ms ease-in-out infinite alternate; }
+.help { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; }
+.tb-log + .tb-log { margin-left: -4px; }
+@keyframes pulse { to { outline-color: var(--blue); } }

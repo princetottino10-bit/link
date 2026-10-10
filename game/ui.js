@@ -151,7 +151,7 @@
     return `<header class="topbar"><div class="tb-row">` +
       `<span class="round">R<b>${Math.min(view.round, 8)}</b>/8</span>` +
       `<span class="tb-phase">${esc(o.phase || '')}</span>` +
-      `<button type="button" class="tb-log" data-act="log">ログ</button></div>` +
+      `<button type="button" class="tb-log" data-act="help" aria-label="ルール">？</button><button type="button" class="tb-log" data-act="log">ログ</button></div>` +
       `<div class="pchips">${chips}</div></header>`;
   }
 
@@ -167,7 +167,20 @@
     return `<ol class="log">${html}</ol>`;
   }
 
+  // 公開の再生単位：1 人分の公開（とその効果）か、1 回の採点（とその後始末）で 1 まとまり
+  const HEAD_KINDS = ['reveal', 'refresh', 'gone', 'score'];
+  function groupFrames(frames) {
+    const groups = [];
+    (frames || []).forEach(f => {
+      const head = f.meta && HEAD_KINDS.includes(f.meta.kind);
+      if (head || !groups.length) groups.push({ head: f, rest: [] });
+      else groups[groups.length - 1].rest.push(f);
+    });
+    return groups;
+  }
+
   root.UI = {
+    groupFrames,
     SEAT_MARKS, FACTION_GLYPH, esc, seatBadge, factionChip, nameize,
     miniCard, handCard, cardDetail, blockText, board, baseBlock, playersBar, logList,
   };

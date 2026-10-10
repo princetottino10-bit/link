@@ -51,8 +51,8 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
   await shot('01-title');
   await click('[data-act="start"]');
 
-  let rounds = new Set(), steps = 0, choices = {};
-  for (; steps < 3000; steps++) {
+  let rounds = new Set(), steps = 0, choices = {}, replays = 0;
+  for (; steps < 5000; steps++) {
     const sc = await screen();
     if (sc === 'final') break;
     if (sc === 'draft') {
@@ -89,6 +89,11 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
         }
       }
       await click('[data-act="plan-ok"]');
+    } else if (sc === 'resolve' && await count('[data-act="replay-next"]')) {
+      replays++;
+      if (await count('.rp-card.is-score')) await shot('07c-replay-score');
+      else if (await count('.rp-card .reveal-card')) await shot('07b-replay-reveal');
+      await click('[data-act="replay-next"]');
     } else if (sc === 'resolve') {
       const kind = await page.locator('.ask').textContent();
       choices[kind] = (choices[kind] || 0) + 1;
@@ -135,6 +140,6 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
   const winner = final ? (await page.locator('.winner-h').textContent()) : null;
   await browser.close();
 
-  console.log(JSON.stringify({ final, winner, rounds: rounds.size, steps, choices, errors }, null, 1));
+  console.log(JSON.stringify({ final, winner, rounds: rounds.size, steps, replays, choices, errors }, null, 1));
   if (!final || errors.length || rounds.size !== 8) process.exit(1);
 })().catch(e => { console.error(e); process.exit(1); });
