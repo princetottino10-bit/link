@@ -165,10 +165,8 @@
   // 順位：カードのあるプレイヤーだけ。同点は上の順位を分け合う。
   function ranking(D, state, bi) {
     const t = totals(D, state, bi);
-    const bdef = D.bases[state.bases[bi].id];
     const present = t.map((v, s) => ({ s, v, has: state.bases[bi].stacks[s].length > 0 })).filter(x => x.has);
-    const reverse = bdef.id === 'b10';
-    present.sort((a, b) => reverse ? a.v - b.v : b.v - a.v);
+    present.sort((a, b) => b.v - a.v);
     const ranks = {};
     present.forEach((x, i) => {
       if (i > 0 && present[i - 1].v === x.v) ranks[x.s] = ranks[present[i - 1].s];
@@ -321,7 +319,7 @@
       }
       case 'r4': case 'a2': drawLog(state, me, 1, rand); break;
       case 'w1': drawLog(state, me, 2, rand); break;
-      case 'w3': drawLog(state, me, 3, rand); discardOne(ctx, state, me); break;
+      case 'w3': drawLog(state, me, 2, rand); discardOne(ctx, state, me); break;
       case 'n3': {
         if (fortress(state, state, bi)) break;
         const opts = othersExposedHere(x => cardValue(D, state, bi, x) <= 2).map(x => x.uid);
@@ -728,9 +726,9 @@
     const st = p.stats;
     switch (p.objective) {
       case 'o1': return st.first >= 4;
-      case 'o2': return st.fd >= 8;
+      case 'o2': return st.fd >= 9;
       case 'o3': return st.fu >= 6;
-      case 'o4': return st.ranked >= 8;
+      case 'o4': return st.ranked >= 9;
       case 'o5': return st.bigScore >= 7;
       case 'o6': return st.second >= 3;
       case 'o7': return p.hand.length >= 5;
