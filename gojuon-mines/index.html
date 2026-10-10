@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>五十音マインスイーパ</title>
-  <meta name="description" content="五十音表にかくれた「お題の言葉」の文字が地雷。数字をヒントに地雷の文字を見つけて、言葉を当てよう。">
+  <meta name="description" content="五十音表にかくれた「お題の言葉」の文字が地雷。数字をヒントに地雷の文字を見つけて、少ない手数で言葉を当てよう。">
   <meta property="og:type" content="website">
   <meta property="og:title" content="五十音マインスイーパ">
   <meta property="og:description" content="地雷は「お題の言葉」の文字。数字ヒントで推理して、かくれた言葉を当てよう。">
@@ -14,363 +14,34 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap">
-  <style>
-    :root {
-      --bg1: #0a1628;
-      --bg2: #1a3f8f;
-      --bg3: #2563b8;
-      --gold: #f5c518;
-      --red: #e8432a;
-      --ink: #fff;
-      --muted: rgba(255,255,255,0.6);
-      --faint: rgba(255,255,255,0.08);
-      --line: rgba(255,255,255,0.14);
-      --cell: rgba(255,255,255,0.10);
-      --cell-hover: rgba(255,255,255,0.18);
-      --open: rgba(10,22,40,0.55);
-      --n1: #7cc4ff;
-      --n2: #7be0a0;
-      --n3: #ffd36b;
-      --n4: #ff9d6b;
-      --n5: #ff7a8a;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { background: var(--bg1); }
-
-    body {
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(160deg, var(--bg1) 0%, #142d6b 35%, var(--bg2) 55%, var(--bg3) 100%);
-      color: var(--ink);
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 28px 16px 60px;
-    }
-
-    header { text-align: center; margin-bottom: 18px; }
-
-    h1 {
-      font-size: clamp(22px, 6vw, 30px);
-      font-weight: 900;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--gold), var(--red));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .tagline { font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 16px 0 14px;
-    }
-
-    .tab, .btn {
-      min-height: 38px;
-      padding: 0 16px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: var(--faint);
-      color: var(--ink);
-      font: 700 13px/1 'Inter', 'Noto Sans JP', sans-serif;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.2s, border-color 0.2s;
-    }
-
-    .tab:hover, .btn:hover { background: rgba(255,255,255,0.14); }
-    .tab.active, .btn.primary {
-      border-color: transparent;
-      color: #1a1203;
-      background: linear-gradient(90deg, var(--gold), var(--red));
-    }
-    .tab:focus-visible, .btn:focus-visible, .cell:focus-visible, .chip:focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 2px;
-    }
-
-    .info {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .stat {
-      padding: 8px 4px;
-      text-align: center;
-      border-radius: 12px;
-      background: var(--faint);
-      border: 1px solid var(--line);
-    }
-    .stat .label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-    .stat .value { font-size: 15px; font-weight: 800; margin-top: 3px; white-space: nowrap; }
-
-    /* ===== Board ===== */
-    .board-wrap {
-      padding: 8px;
-      border-radius: 16px;
-      background: rgba(10,22,40,0.35);
-      border: 1px solid var(--line);
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(11, 1fr);
-      gap: 3px;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      touch-action: manipulation;
-    }
-
-    .cell {
-      position: relative;
-      aspect-ratio: 1;
-      border: 0;
-      border-radius: 6px;
-      background: var(--cell);
-      color: var(--ink);
-      font: 700 clamp(13px, 4.2vw, 20px)/1 'Noto Sans JP', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
-      transition: background 0.15s, transform 0.1s;
-    }
-    .cell:hover { background: var(--cell-hover); }
-    .cell:active { transform: scale(0.94); }
-    .cell.blank { background: transparent; box-shadow: none; cursor: default; pointer-events: none; }
-
-    .cell.open {
-      background: var(--open);
-      box-shadow: none;
-      cursor: default;
-    }
-    .cell.open .kana {
-      position: absolute;
-      top: 2px;
-      left: 3px;
-      font-size: clamp(7px, 2vw, 10px);
-      color: rgba(255,255,255,0.35);
-      font-weight: 600;
-    }
-    .cell.open .num { font-family: 'Inter', sans-serif; font-weight: 900; font-size: clamp(14px, 4.4vw, 21px); }
-    .n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); }
-    .n4 { color: var(--n4); } .n5, .n6, .n7, .n8 { color: var(--n5); }
-
-    .cell.flag {
-      background: rgba(245,197,24,0.22);
-      box-shadow: inset 0 0 0 2px var(--gold);
-      color: var(--gold);
-    }
-    .cell.flag::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      right: 3px;
-      width: 0;
-      height: 0;
-      border-left: 7px solid var(--red);
-      border-top: 4px solid transparent;
-      border-bottom: 4px solid transparent;
-    }
-
-    .cell.mine {
-      background: rgba(232,67,42,0.35);
-      box-shadow: inset 0 0 0 2px var(--red);
-      color: #fff;
-      cursor: default;
-    }
-    .cell.mine.boom { background: var(--red); }
-    .cell.wrong-flag { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); color: var(--muted); }
-    .cell.wrong-flag::after { display: none; }
-
-    .board-foot {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .hint-text { font-size: 11px; color: var(--muted); }
-
-    .btn.flagmode.on {
-      border-color: var(--gold);
-      background: rgba(245,197,24,0.2);
-      color: var(--gold);
-    }
-
-    .message {
-      min-height: 22px;
-      margin: 12px 0 4px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--gold);
-    }
-
-    /* ===== Answer ===== */
-    .panel {
-      margin-top: 10px;
-      padding: 14px;
-      border-radius: 16px;
-      background: var(--faint);
-      border: 1px solid var(--line);
-    }
-    .panel-title { font-size: 11px; letter-spacing: 2px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
-
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px; align-items: center; }
-    .chips .empty { font-size: 12px; color: var(--muted); }
-    .chip {
-      min-width: 36px;
-      height: 36px;
-      padding: 0 8px;
-      border-radius: 10px;
-      border: 1px solid var(--gold);
-      background: rgba(245,197,24,0.14);
-      color: var(--gold);
-      font: 800 17px/1 'Noto Sans JP', sans-serif;
-      cursor: pointer;
-    }
-    .chip.sure { border-color: var(--red); background: rgba(232,67,42,0.3); color: #fff; }
-
-    .answer-row { display: flex; gap: 8px; margin-top: 12px; }
-    .answer-row input {
-      flex: 1;
-      min-width: 0;
-      height: 44px;
-      padding: 0 14px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(10,22,40,0.5);
-      color: var(--ink);
-      font: 700 18px/1 'Noto Sans JP', sans-serif;
-      letter-spacing: 2px;
-    }
-    .answer-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-    .answer-row .btn { min-height: 44px; }
-
-    .keys { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .keys .btn { min-height: 34px; padding: 0 12px; font-size: 12px; }
-
-    .shake { animation: shake 0.35s; }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      75% { transform: translateX(6px); }
-    }
-
-    details.rules {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: var(--faint);
-      border: 1px solid var(--line);
-      font-size: 13px;
-      line-height: 1.8;
-    }
-    details.rules summary { cursor: pointer; font-weight: 700; }
-    details.rules ol { padding-left: 1.4em; margin-top: 6px; color: rgba(255,255,255,0.85); }
-    details.rules li { margin: 2px 0; }
-
-    .actions { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-
-    /* ===== Result modal ===== */
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      background: rgba(5,10,20,0.7);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-    .modal.show { display: flex; }
-    .modal-card {
-      width: 100%;
-      max-width: 380px;
-      padding: 24px 20px;
-      border-radius: 20px;
-      text-align: center;
-      background: linear-gradient(160deg, #142d6b, #0a1628);
-      border: 1px solid rgba(245,197,24,0.4);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    .modal-head { font-size: 22px; font-weight: 900; }
-    .modal-word {
-      margin: 14px 0 6px;
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      color: var(--gold);
-    }
-    .modal-genre { font-size: 12px; color: var(--muted); }
-    .modal-stats { margin: 14px 0 18px; font-size: 14px; line-height: 1.9; }
-    .modal .actions { margin-top: 0; }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 28px;
-      z-index: 30;
-      transform: translate(-50%, 16px);
-      padding: 11px 20px;
-      border-radius: 999px;
-      background: rgba(10,22,40,0.92);
-      border: 1px solid rgba(245,197,24,0.5);
-      font-size: 13px;
-      font-weight: 700;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-    footer { margin-top: 28px; text-align: center; font-size: 11px; color: var(--muted); }
-    footer a { color: var(--muted); }
-
-    @media (max-width: 400px) {
-      .board { gap: 2px; }
-      .board-wrap { padding: 6px; }
-      .cell { border-radius: 4px; }
-      .stat .value { font-size: 13px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; animation: none !important; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header>
       <h1>五十音マインスイーパ</h1>
-      <p class="tagline">地雷は「お題の言葉」の文字。推理して言葉を当てよう</p>
+      <p class="tagline">地雷は「お題の言葉」の文字。少ない手数で当てよう</p>
     </header>
 
-    <div class="tabs" role="tablist">
-      <button class="tab" id="tabDaily" role="tab">今日のお題</button>
-      <button class="tab" id="tabFree" role="tab">フリープレイ</button>
+    <div class="tabs">
+      <div role="tablist" class="tablist">
+        <button class="tab" id="tabDaily" role="tab">今日のお題</button>
+        <button class="tab" id="tabFree" role="tab">フリープレイ</button>
+      </div>
+      <button class="btn icon-btn" id="openStats" aria-label="成績">📊</button>
+      <button class="btn icon-btn" id="openRanking" aria-label="ランキング">🏆</button>
+    </div>
+
+    <div class="levels" role="radiogroup" aria-label="むずかしさ">
+      <button class="level" id="lvNormal" role="radio">ふつう<small>連鎖で開く</small></button>
+      <button class="level hard" id="lvHard" role="radio">🔥むずい<small>1マスずつ・ランキング</small></button>
     </div>
 
     <div class="info">
       <div class="stat"><div class="label">ジャンル</div><div class="value" id="genre">-</div></div>
       <div class="stat"><div class="label">文字数</div><div class="value" id="len">-</div></div>
       <div class="stat"><div class="label">地雷</div><div class="value" id="mineCount">-</div></div>
+      <div class="stat"><div class="label">手数</div><div class="value" id="moves">-</div></div>
       <div class="stat"><div class="label">ライフ</div><div class="value" id="lives">-</div></div>
     </div>
 
@@ -393,9 +64,11 @@
       </div>
       <div class="keys">
         <button class="btn" id="kDaku" title="直前の文字に濁点・半濁点・小文字をつける">゛゜小</button>
-        <button class="btn" id="kBack">⌫</button>
+        <button class="btn" id="kBack" aria-label="1文字消す">⌫</button>
         <button class="btn" id="kClear">クリア</button>
       </div>
+      <div class="guesses" id="guesses" aria-label="これまでの答え"></div>
+      <div class="legend" id="legend" hidden><b style="background:#2f9e57"></b>場所も正解<b style="background:#c9971c"></b>地雷の文字<b style="background:rgba(255,255,255,.25)"></b>地雷じゃない</div>
     </div>
 
     <div class="actions">
@@ -408,12 +81,13 @@
       <summary>あそびかた</summary>
       <ol>
         <li>五十音表のどこかに、お題の言葉に使われている文字が<b>地雷</b>としてかくれています。</li>
-        <li>マスを開けると、まわり8マスにある地雷の数が出ます。</li>
+        <li>マスを開けると、まわり8マスにある地雷の数が出ます。<b>ふつう</b>は 0 のマスから周りが連鎖して開きます。<b>🔥むずい</b>は1マスずつしか開かず、0 のマスの周りに「安全」の印がつきます。</li>
         <li>地雷だと思う文字には旗を立てましょう（右クリック・長押し・Fキー・旗モード）。</li>
         <li>地雷を踏むとライフが1減りますが、その文字は確定します。<b>1手目だけはセーフ</b>。</li>
         <li>濁点・半濁点・小さい文字は元の文字（が→か、ぱ→は、っ→つ）が地雷になります。同じ文字は1つだけ。</li>
-        <li>いつでも答えられます。まちがえるとライフが1減ります。ライフ0で終了。</li>
-        <li>少ない手数で当てるほどすごい！</li>
+        <li>いつでも答えられます。まちがえるとライフが1減りますが、1文字ずつ<b>🟩場所も正解・🟨地雷の文字・⬜地雷じゃない</b>が分かります。</li>
+        <li><b>手数＝マスを開けた回数＋答えた回数</b>。少ない手数で当てるほど高い称号がもらえます。ライフ0で終了。</li>
+        <li>🔥むずいモードの「今日のお題」は🏆ランキングに参加できます（ふつうとは別のお題）。</li>
       </ol>
     </details>
 
@@ -425,9 +99,17 @@
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalHead">
     <div class="modal-card">
       <div class="modal-head" id="modalHead"></div>
+      <div class="badge" id="modalBadge"></div>
       <div class="modal-word" id="modalWord"></div>
       <div class="modal-genre" id="modalGenre"></div>
       <div class="modal-stats" id="modalStats"></div>
+      <div id="rankBox" hidden>
+        <form class="rank-form" id="rankForm">
+          <input id="rankName" maxlength="12" placeholder="なまえ（12文字まで）" aria-label="ランキングに載せる名前" autocomplete="nickname">
+          <button class="btn primary" id="rankSubmit" type="submit">ランキングに登録</button>
+        </form>
+        <div class="rank-note" id="rankNote" aria-live="polite"></div>
+      </div>
       <div class="actions">
         <button class="btn primary" id="shareX">Xでシェア</button>
         <button class="btn" id="copy">コピー</button>
@@ -436,476 +118,21 @@
     </div>
   </div>
 
+  <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-label="成績とランキング">
+    <div class="modal-card wide">
+      <div class="modal-tabs" role="tablist">
+        <button class="tab" id="tabStats" role="tab" aria-controls="infoBody">📊 成績</button>
+        <button class="tab" id="tabRanking" role="tab" aria-controls="infoBody">🏆 ランキング</button>
+      </div>
+      <div id="infoBody" role="tabpanel"></div>
+      <div class="actions">
+        <button class="btn" id="closeInfo">とじる</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script>
-  (() => {
-    // 置き場所が変わっても壊れないよう、シェア URL は今開いているページから作る
-    const URL_SELF = /^https?:$/.test(location.protocol)
-      ? location.origin + location.pathname.replace(/index\.html$/, '')
-      : 'https://princetottino10-bit.github.io/link/gojuon-mines/';
-    const MAX_LIVES = 3;
-
-    // 左から ん わ ら や ま は な た さ か あ（縦書きの五十音表と同じ並び）。「・」は空きマス
-    const TABLE = ['ん・・・・', 'わ・・・を', 'らりるれろ', 'や・ゆ・よ', 'まみむめも', 'はひふへほ',
-                   'なにぬねの', 'たちつてと', 'さしすせそ', 'かきくけこ', 'あいうえお'];
-    const COLS = TABLE.length, ROWS = 5;
-
-    const WORDS = {
-      'たべもの': 'りんご みかん いちご ぶどう すいか さくらんぼ おにぎり てんぷら うどん やきとり からあげ たこやき おこのみやき ぎょうざ なっとう みそしる たまご ちくわ せんべい だいふく ようかん まんじゅう おもち かぼちゃ にんじん だいこん たまねぎ きゅうり じゃがいも とうもろこし ほうれんそう しいたけ えだまめ めろん れもん さつまいも くるみ ぎゅうにゅう おむらいす すきやき しゃぶしゃぶ おでん うなぎ まぐろ あんぱん',
-      'いきもの': 'うさぎ きりん らいおん ぱんだ こあら ごりら きつね たぬき ひつじ にわとり ぺんぎん かえる いるか くじら しまうま ひよこ からす つばめ ふくろう もぐら かたつむり てんとうむし かぶとむし くわがた とんぼ ほたる だんごむし いのしし おおかみ あざらし らっこ ふらみんご だちょう かもめ はくちょう めだか きんぎょ くらげ',
-      'しぜん': 'さくら かみなり たいよう みずうみ ゆうやけ あさひ くもり たいふう すなはま いなずま ゆうだち こおり おんせん かざん さばく みさき もみじ いちょう どんぐり つくし ひまわり あさがお たんぽぽ ちゅうりっぷ こすもす すみれ あじさい まつぼっくり',
-      'のりもの': 'でんしゃ ひこうき じてんしゃ くるま しんかんせん ろけっと しょうぼうしゃ きゅうきゅうしゃ ちかてつ ゆうらんせん ききゅう せんすいかん いかだ とらっく',
-      'がっこう': 'えんぴつ けしごむ じょうぎ ふでばこ こくばん らんどせる つくえ きょうしつ たいいくかん としょかん うんどうかい しゅくだい きゅうしょく せんせい じかんわり そつぎょう にゅうがく',
-      'いえ・どうぐ': 'ほうき はさみ とけい めがね まくら ふとん れいぞうこ せんたくき そうじき でんわ てがみ ほうちょう やかん はぶらし せっけん',
-      'あそび': 'やきゅう すもう じゅうどう けんどう すいえい からて たっきゅう まらそん かるた けんだま おにごっこ かくれんぼ なわとび しりとり すごろく おりがみ つみき ぶらんこ すべりだい たこあげ',
-      'ぎょうじ': 'おしょうがつ ひなまつり こどものひ たなばた おつきみ くりすます おおみそか せつぶん はなみ なつやすみ ふゆやすみ おぼん まつり ゆかた こたつ かきごおり ふうりん かどまつ おとしだま かがみもち もちつき はなび ぼんおどり',
-      'からだ': 'あたま くちびる おなか せなか まゆげ ほっぺ しんぞう くるぶし てのひら おへそ'
-    };
-
-    // ---------- kana utils ----------
-    const SMALL = 'ぁぃぅぇぉっゃゅょゎ';
-    const toHira = s => s.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
-    const baseKana = ch => {
-      if (SMALL.includes(ch)) return String.fromCharCode(ch.charCodeAt(0) + 1);
-      return ch.normalize('NFD').replace(/[゙゚]/g, '');
-    };
-    const mineLetters = word => [...new Set([...word].map(baseKana))];
-
-    // ゛゜小 キー：直前の文字を 元→小→濁点→半濁点→元… と切り替える
-    const variants = base => {
-      const list = [base];
-      const code = base.charCodeAt(0);
-      if (SMALL.includes(String.fromCharCode(code - 1))) list.push(String.fromCharCode(code - 1));
-      for (const mark of ['゙', '゚']) {
-        const v = (base + mark).normalize('NFC');
-        if (v.length === 1) list.push(v);
-      }
-      return list;
-    };
-
-    // ---------- word pool ----------
-    const KANA_SET = new Set(TABLE.join('').replace(/・/g, ''));
-    // 地雷の文字と文字数がまったく同じ単語は盤面で見分けられないので、先に出たほうだけ残す
-    const POOL = [];
-    const boardKeys = new Set();
-    for (const [genre, list] of Object.entries(WORDS)) {
-      for (const w of list.split(/\s+/)) {
-        const m = mineLetters(w);
-        if (m.length < 3 || m.length > 8 || !m.every(k => KANA_SET.has(k))) continue;
-        const key = [...m].sort().join('') + '/' + [...w].length;
-        if (boardKeys.has(key)) continue;
-        boardKeys.add(key);
-        POOL.push({ w, genre });
-      }
-    }
-
-    // ---------- seeded random ----------
-    const mulberry32 = a => () => {
-      a |= 0; a = a + 0x6D2B79F5 | 0;
-      let t = Math.imul(a ^ a >>> 15, 1 | a);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-    const shuffled = (arr, rnd) => {
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(rnd() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    };
-    const DAILY_ORDER = shuffled(POOL, mulberry32(50));
-    const jstDay = () => Math.floor((Date.now() + 9 * 3600e3) / 86400e3);
-    const DAY0 = Math.floor(Date.UTC(2026, 9, 9) / 86400e3);
-    const dayLabel = d => {
-      const dt = new Date(d * 86400e3);
-      return `${dt.getUTCMonth() + 1}/${dt.getUTCDate()}`;
-    };
-
-    // ---------- storage (best effort) ----------
-    const store = {
-      get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-    };
-
-    // ---------- state ----------
-    const $ = id => document.getElementById(id);
-    let mode = 'daily';
-    let S = null;      // current game
-    let cells = [];    // index = c * ROWS + r
-    let flagMode = false;
-
-    const idx = (c, r) => c * ROWS + r;
-    const neighbors = i => {
-      const c = Math.floor(i / ROWS), r = i % ROWS, out = [];
-      for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
-        if (!dc && !dr) continue;
-        const nc = c + dc, nr = r + dr;
-        if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
-        if (cells[idx(nc, nr)].kana) out.push(idx(nc, nr));
-      }
-      return out;
-    };
-
-    const dailyPick = day => DAILY_ORDER[((day - DAY0) % DAILY_ORDER.length + DAILY_ORDER.length) % DAILY_ORDER.length];
-    const freshState = (pick, day) => ({
-      word: pick.w, genre: pick.genre, day,
-      open: [], flags: [], booms: [], lives: MAX_LIVES, moves: 0, misses: 0, done: false, won: false
-    });
-    const storeKey = () => mode === 'daily' ? `gojuon-mines:${S.day}` : 'gojuon-mines:free';
-    let gameId = 0;
-
-    // fresh: フリープレイで保存中のゲームを捨てて新しいお題にする
-    function newGame(m, fresh = false) {
-      mode = m;
-      gameId++;
-      closeModal();
-      const day = jstDay();
-      if (m === 'daily') {
-        // 保存があればそれを優先する（単語リストを変えても、その日の途中経過は消えない）
-        const saved = store.get(`gojuon-mines:${day}`);
-        S = saved && saved.word ? saved : freshState(dailyPick(day), day);
-      } else {
-        const saved = fresh ? null : store.get('gojuon-mines:free');
-        if (saved && saved.word && !saved.done) {
-          S = saved;
-        } else {
-          // 今日のお題と直前のお題は避ける
-          const avoid = new Set([dailyPick(day).w, S && S.word]);
-          const choices = POOL.filter(p => !avoid.has(p.w));
-          S = freshState(choices[Math.floor(Math.random() * choices.length)], day);
-        }
-      }
-      buildCells();
-      $('answer').value = '';
-      if (!S.done) setMessage('マスを開けて、地雷の文字をさがそう');
-      else setMessage(mode === 'daily' ? '今日のお題はおわり。「結果を見る」からシェアできます' : '');
-      save();
-      render();
-    }
-
-    function buildCells() {
-      const mines = new Set(mineLetters(S.word));
-      cells = [];
-      for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
-        const k = TABLE[c][r];
-        cells.push({ kana: k === '・' ? null : k, mine: mines.has(k) });
-      }
-      cells.forEach((cell, i) => {
-        if (cell.kana) cell.n = neighbors(i).filter(j => cells[j].mine).length;
-      });
-    }
-
-    function save() {
-      store.set(storeKey(), S);
-    }
-
-    // ---------- actions ----------
-    function openCell(i) {
-      const cell = cells[i];
-      if (S.done || !cell.kana || S.open.includes(i) || S.booms.includes(i) || S.flags.includes(i)) return;
-      const first = S.moves === 0;
-      S.moves++;
-      if (cell.mine) {
-        S.booms.push(i);
-        if (first) {
-          setMessage(`1手目はセーフ！「${cell.kana}」は地雷の文字です`);
-        } else {
-          S.lives--;
-          setMessage(`ドカン！「${cell.kana}」は地雷の文字。ライフ -1`);
-          bump($('board'));
-          if (S.lives <= 0) return finish(false);
-        }
-      } else {
-        const stack = [i];
-        while (stack.length) {
-          const j = stack.pop();
-          if (S.open.includes(j) || cells[j].mine) continue;
-          S.open.push(j);
-          const f = S.flags.indexOf(j);
-          if (f >= 0) S.flags.splice(f, 1);
-          if (cells[j].n === 0) stack.push(...neighbors(j));
-        }
-        const safe = cells.filter(c => c.kana && !c.mine).length;
-        if (S.open.length === safe) setMessage('安全なマスは全部開けた！あとは並べ替えて答えよう');
-        else setMessage('');
-      }
-      save();
-      render();
-    }
-
-    function toggleFlag(i) {
-      if (S.done || !cells[i].kana || S.open.includes(i) || S.booms.includes(i)) return;
-      const f = S.flags.indexOf(i);
-      if (f >= 0) S.flags.splice(f, 1); else S.flags.push(i);
-      save();
-      render();
-    }
-
-    function submitAnswer() {
-      if (S.done) return;
-      const v = toHira($('answer').value).replace(/[\s　]/g, '');
-      if (!v) return;
-      // 文字数違い・ひらがな以外は打ちまちがいとみなし、ライフは減らさない
-      const len = [...S.word].length;
-      if (!/^[ぁ-ゖ]+$/.test(v)) {
-        bump($('answerRow'));
-        return setMessage('ひらがなで答えてね（ライフは減りません）');
-      }
-      if ([...v].length !== len) {
-        bump($('answerRow'));
-        return setMessage(`答えは${len}文字です（ライフは減りません）`);
-      }
-      if (v === S.word) return finish(true);
-      S.lives--;
-      S.misses = (S.misses || 0) + 1;
-      bump($('answerRow'));
-      setMessage(`「${v}」じゃないみたい… ライフ -1`);
-      if (S.lives <= 0) return finish(false);
-      save();
-      render();
-    }
-
-    function finish(won) {
-      S.done = true;
-      S.won = won;
-      save();
-      render();
-      setMessage(won ? '正解！' : `ざんねん… 正解は「${S.word}」`);
-      const id = gameId;
-      setTimeout(() => { if (id === gameId) showResult(); }, won ? 300 : 700);
-    }
-
-    // ---------- render ----------
-    const boardEl = $('board');
-    let cellEls = [];
-
-    function buildBoard() {
-      boardEl.innerHTML = '';
-      cellEls = [];
-      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
-        const i = idx(c, r);
-        const b = document.createElement('button');
-        b.className = 'cell';
-        b.dataset.i = i;
-        boardEl.appendChild(b);
-        cellEls[i] = b;
-      }
-    }
-
-    function render() {
-      const minesShown = S.done;
-      cells.forEach((cell, i) => {
-        const el = cellEls[i];
-        if (!cell.kana) {
-          el.className = 'cell blank';
-          el.textContent = '';
-          el.tabIndex = -1;
-          el.setAttribute('aria-hidden', 'true');
-          return;
-        }
-        const isOpen = S.open.includes(i), isBoom = S.booms.includes(i), isFlag = S.flags.includes(i);
-        let cls = 'cell', html = cell.kana, label = cell.kana;
-        if (isOpen) {
-          cls += ' open';
-          html = `<span class="kana">${cell.kana}</span>` + (cell.n ? `<span class="num n${cell.n}">${cell.n}</span>` : '');
-          label = `${cell.kana} 開いた 周りの地雷${cell.n}`;
-        } else if (isBoom || (minesShown && cell.mine)) {
-          cls += ' mine' + (isBoom ? ' boom' : '');
-          label = `${cell.kana} 地雷`;
-        } else if (isFlag) {
-          cls += ' flag' + (minesShown && !cell.mine ? ' wrong-flag' : '');
-          label = `${cell.kana} 旗`;
-        }
-        el.className = cls;
-        el.innerHTML = html;
-        el.setAttribute('aria-label', label);
-      });
-
-      $('tabDaily').classList.toggle('active', mode === 'daily');
-      $('tabFree').classList.toggle('active', mode === 'free');
-      $('tabDaily').setAttribute('aria-selected', mode === 'daily');
-      $('tabFree').setAttribute('aria-selected', mode === 'free');
-      $('genre').textContent = S.genre;
-      $('len').textContent = `${S.word.length}文字`;
-      $('mineCount').textContent = `${mineLetters(S.word).length}個`;
-      $('lives').textContent = hearts();
-
-      // 見つけた文字：踏んだ地雷（確定）→ 旗（候補）の順
-      const chips = $('chips');
-      chips.innerHTML = '';
-      const list = [...S.booms.map(i => ({ k: cells[i].kana, sure: true })),
-                    ...S.flags.map(i => ({ k: cells[i].kana, sure: false }))];
-      if (!list.length) chips.innerHTML = '<span class="empty">旗を立てた文字がここに並びます</span>';
-      for (const { k, sure } of list) {
-        const b = document.createElement('button');
-        b.className = 'chip' + (sure ? ' sure' : '');
-        b.textContent = k;
-        b.disabled = S.done;
-        b.addEventListener('click', () => { $('answer').value += k; });
-        chips.appendChild(b);
-      }
-
-      for (const id of ['answer', 'submit', 'kDaku', 'kBack', 'kClear', 'giveUp']) $(id).disabled = S.done;
-      $('giveUp').hidden = S.done;
-      $('next').hidden = mode !== 'free' || !S.done;
-      $('showResult').hidden = !S.done;
-      $('flagMode').classList.toggle('on', flagMode);
-      $('flagMode').setAttribute('aria-pressed', flagMode);
-    }
-
-    const hearts = () => '❤️'.repeat(Math.max(S.lives, 0)) + '🤍'.repeat(MAX_LIVES - Math.max(S.lives, 0));
-
-    function setMessage(t) { $('message').textContent = t; }
-
-    function bump(el) {
-      el.classList.remove('shake');
-      void el.offsetWidth;
-      el.classList.add('shake');
-    }
-
-    // ---------- result / share ----------
-    function shareText() {
-      const title = mode === 'daily' ? `#${S.day - DAY0 + 1}（${dayLabel(S.day)}のお題）` : 'フリープレイ';
-      const miss = S.misses ? ` 誤答${S.misses}` : '';
-      const body = S.won ? `${hearts()} ${S.moves}手${miss}` : '💥 ざんねん…';
-      return `五十音マインスイーパ ${title}\n${body}\n${URL_SELF}`;
-    }
-
-    function showResult() {
-      $('modalHead').textContent = S.won ? '🎉 正解！' : '💥 ゲームオーバー';
-      $('modalWord').textContent = S.word;
-      $('modalGenre').textContent = `ジャンル：${S.genre}`;
-      $('modalStats').innerHTML = `ライフ ${hearts()}<br>手数 ${S.moves}　誤答 ${S.misses || 0}`
-        + (mode === 'daily' ? '<br><small style="color:var(--muted)">次のお題は明日0時（日本時間）</small>' : '');
-      if (!$('modal').classList.contains('show')) lastFocus = document.activeElement;
-      $('modal').classList.add('show');
-      $('closeModal').focus();
-    }
-
-    let lastFocus = null;
-    function closeModal() {
-      if (!$('modal').classList.contains('show')) return;
-      $('modal').classList.remove('show');
-      if (lastFocus && document.contains(lastFocus) && !lastFocus.disabled) lastFocus.focus();
-      lastFocus = null;
-    }
-
-    let toastTimer;
-    function toast(t) {
-      const el = $('toast');
-      el.textContent = t;
-      el.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
-    }
-
-    // ---------- events ----------
-    let pressTimer = null, longPressed = false;
-    boardEl.addEventListener('pointerdown', e => {
-      const el = e.target.closest('.cell');
-      if (!el) return;
-      longPressed = false;
-      clearTimeout(pressTimer);
-      if (e.pointerType === 'mouse') return;
-      pressTimer = setTimeout(() => {
-        longPressed = true;
-        toggleFlag(+el.dataset.i);
-        if (navigator.vibrate) navigator.vibrate(20);
-      }, 420);
-    });
-    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) {
-      boardEl.addEventListener(ev, () => clearTimeout(pressTimer));
-    }
-    boardEl.addEventListener('click', e => {
-      const el = e.target.closest('.cell');
-      if (!el || longPressed) { longPressed = false; return; }
-      const i = +el.dataset.i;
-      if (flagMode) toggleFlag(i); else openCell(i);
-    });
-    boardEl.addEventListener('contextmenu', e => {
-      const el = e.target.closest('.cell');
-      if (!el) return;
-      e.preventDefault();
-      if (!longPressed) toggleFlag(+el.dataset.i);
-    });
-
-    boardEl.addEventListener('keydown', e => {
-      const el = e.target.closest('.cell');
-      if (!el || e.key.toLowerCase() !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
-      e.preventDefault();
-      toggleFlag(+el.dataset.i);
-    });
-
-    $('flagMode').addEventListener('click', () => { flagMode = !flagMode; render(); });
-    $('submit').addEventListener('click', submitAnswer);
-    $('answer').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) submitAnswer(); });
-    $('kBack').addEventListener('click', () => { $('answer').value = [...$('answer').value].slice(0, -1).join(''); });
-    $('kClear').addEventListener('click', () => { $('answer').value = ''; });
-    $('kDaku').addEventListener('click', () => {
-      const chars = [...toHira($('answer').value)];
-      if (!chars.length) return;
-      const last = chars.pop();
-      const list = variants(baseKana(last));
-      const pos = list.indexOf(last);
-      chars.push(list[(pos + 1) % list.length]);
-      $('answer').value = chars.join('');
-    });
-    $('giveUp').addEventListener('click', () => {
-      if (!S.done && confirm('あきらめて答えを見ますか？')) { S.lives = 0; finish(false); }
-    });
-    $('next').addEventListener('click', () => newGame('free', true));
-    $('showResult').addEventListener('click', showResult);
-    $('tabDaily').addEventListener('click', () => mode !== 'daily' && newGame('daily'));
-    $('tabFree').addEventListener('click', () => mode !== 'free' && newGame('free'));
-
-    $('closeModal').addEventListener('click', closeModal);
-    $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
-    document.addEventListener('keydown', e => {
-      if (!$('modal').classList.contains('show')) return;
-      if (e.key === 'Escape') return closeModal();
-      if (e.key !== 'Tab') return;
-      // モーダルの中だけでフォーカスを回す
-      const items = [...$('modal').querySelectorAll('button')];
-      const first = items[0], last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    });
-    // 開きっぱなしで日付をまたいだら、手をつけていないか終わっているときだけ新しいお題に切り替える
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden || mode !== 'daily' || jstDay() === S.day) return;
-      if (S.done || (!S.moves && !S.misses)) {
-        newGame('daily');
-        toast('日付が変わったので新しいお題です');
-      } else {
-        setMessage('日付が変わりました。このお題を終えたら再読み込みで新しいお題に');
-      }
-    });
-    $('shareX').addEventListener('click', () => {
-      window.open('https://x.com/intent/post?text=' + encodeURIComponent(shareText()), '_blank', 'noopener');
-    });
-    $('copy').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(shareText()); toast('コピーしました'); }
-      catch { toast('コピーできませんでした'); }
-    });
-
-    // 30日より前の今日のお題の記録は消す
-    try {
-      const old = jstDay() - 30;
-      for (let n = localStorage.length - 1; n >= 0; n--) {
-        const m = /^gojuon-mines:(\d+)$/.exec(localStorage.key(n));
-        if (m && +m[1] < old) localStorage.removeItem(m[0]);
-      }
-    } catch {}
-
-    buildBoard();
-    if (!store.get('gojuon-mines:seen-rules')) {
-      $('rules').open = true;
-      store.set('gojuon-mines:seen-rules', true);
-    }
-    newGame('daily');
-  })();
-  </script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
