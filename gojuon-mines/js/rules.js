@@ -135,4 +135,3 @@ export const SHARE_MARK = { hit: '🟩', mine: '🟨', miss: '⬜' };
 
 // ---------- ranked match ----------
 export const MATCH_SIZE = 3;
-export const HINT_PENALTY_MS = 30000;

@@ -28,7 +28,8 @@ test('variants は小文字・濁点・半濁点の順', () => {
 
 test('お題は 7〜10 文字で、同じ文字を2回使わず、全部盤面にある', () => {
   assert.ok(LONG_WORDS.length >= 150);
-  for (const [w, kanji] of LONG_WORDS) {
+  for (const [w, kanji, genre] of LONG_WORDS) {
+    assert.ok(genre, `${w} にジャンルがない`);
     const len = [...w].length;
     assert.ok(len >= 7 && len <= 10, w);
     assert.equal(mineLetters(w).length, len, w);

@@ -1,5 +1,7 @@
 // JMdict（よく使う言葉の版）から、読みが 7〜10 文字で同じ文字を2回使わない名詞を抜き出して js/long-words.js を作る
 // 8〜10 文字だけだと 60 語ほどしかないので 7 文字も入れる
+// ジャンルは tools/genres.json で手作業で付ける。ジャンルが付いていない言葉は使わない
+// （お題に向かない言葉は genres.json に入れないことで外す。新しく出た言葉は最後に一覧を表示する）
 // 使い方: node gojuon-mines/tools/build-words.mjs <jmdict-eng-common-*.json>
 // 辞書データ: JMdict (EDRDG) CC BY-SA 4.0 https://www.edrdg.org/edrdg/licence.html
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -9,8 +11,7 @@ import { baseKana, KANA_SET } from '../js/rules.js';
 const MIN_LEN = 7, MAX_LEN = 10;
 // 名詞として使える言葉だけ（「〜なくてはいけません」のような言い回しを外す）
 const NOUN_POS = new Set(['n', 'adj-no', 'n-adv', 'n-t']);
-// お題に向かない言葉
-const NG = new Set(['えんじょこうさい']);
+const GENRES = JSON.parse(readFileSync(new URL('./genres.json', import.meta.url), 'utf8'));
 
 const src = process.argv[2];
 if (!src) throw new Error('JMdict の JSON ファイルを指定してください');
@@ -32,20 +33,22 @@ for (const entry of dict.words) {
   const isNoun = entry.sense.some(s => s.partOfSpeech.some(p => NOUN_POS.has(p)));
   if (!isNoun) continue;
   for (const kana of entry.kana) {
-    if (!isValid(kana.text) || words.has(kana.text) || NG.has(kana.text)) continue;
-    words.set(kana.text, { w: kana.text, kanji: kanji.text });
+    if (!isValid(kana.text) || words.has(kana.text)) continue;
+    words.set(kana.text, { w: kana.text, kanji: kanji.text, genre: GENRES[kana.text] });
   }
 }
 
-const list = [...words.values()].sort((a, b) => a.w.localeCompare(b.w, 'ja'));
+const unlabeled = [...words.values()].filter(x => !x.genre);
+const list = [...words.values()].filter(x => x.genre).sort((a, b) => a.w.localeCompare(b.w, 'ja'));
 const out = fileURLToPath(new URL('../js/long-words.js', import.meta.url));
 writeFileSync(out,
   '// 自動生成（tools/build-words.mjs）。手で編集しない\n' +
   '// 辞書データ: JMdict (EDRDG) CC BY-SA 4.0 https://www.edrdg.org/edrdg/licence.html\n' +
-  `// 読みが ${MIN_LEN}〜${MAX_LEN} 文字で、同じ文字（濁点・小文字は元の文字で数える）を2回使わない言葉\n` +
+  `// 読みが ${MIN_LEN}〜${MAX_LEN} 文字で、同じ文字（濁点・小文字は元の文字で数える）を2回使わない言葉。[読み, 漢字, ジャンル]\n` +
   'export const LONG_WORDS = [\n' +
-  list.map(x => `  [${JSON.stringify(x.w)}, ${JSON.stringify(x.kanji)}]`).join(',\n') +
+  list.map(x => `  [${JSON.stringify(x.w)}, ${JSON.stringify(x.kanji)}, ${JSON.stringify(x.genre)}]`).join(',\n') +
   '\n];\n');
 const byLen = {};
 for (const x of list) byLen[[...x.w].length] = (byLen[[...x.w].length] || 0) + 1;
 process.stdout.write(`${list.length} words ${JSON.stringify(byLen)}\n`);
+process.stdout.write(`ジャンルなしで外した ${unlabeled.length} 語: ${unlabeled.map(x => x.w).join(' ')}\n`);

@@ -16,6 +16,9 @@
   --n3: #ffd36b;
   --n4: #ff9d6b;
   --n5: #ff7a8a;
+  /* ゲームUI向け：見出し・数字は極太の Dela Gothic One、本文と盤面は丸ゴシックの M PLUS Rounded 1c */
+  --font-ui: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', sans-serif;
+  --font-display: 'Dela Gothic One', 'M PLUS Rounded 1c', sans-serif;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,7 +26,7 @@
 html { background: var(--bg1); }
 
 body {
-  font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  font-family: var(--font-ui);
   min-height: 100vh;
   background: linear-gradient(160deg, var(--bg1) 0%, #142d6b 35%, var(--bg2) 55%, var(--bg3) 100%);
   color: var(--ink);
@@ -64,7 +67,7 @@ h1 {
   border: 1px solid var(--line);
   background: var(--faint);
   color: var(--ink);
-  font: 700 13px/1 'Inter', 'Noto Sans JP', sans-serif;
+  font: 700 13px/1 var(--font-ui);
   cursor: pointer;
   transition: background 0.2s, transform 0.2s, border-color 0.2s;
 }
@@ -82,7 +85,7 @@ h1 {
 
 .info {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr;
+  grid-template-columns: 1fr 1fr 1.3fr 1.3fr;
   gap: 6px;
   margin-bottom: 14px;
 }
@@ -124,7 +127,7 @@ h1 {
   border-radius: 6px;
   background: var(--cell);
   color: var(--ink);
-  font: 700 clamp(13px, 4.2vw, 20px)/1 'Noto Sans JP', sans-serif;
+  font: 700 clamp(13px, 4.2vw, 20px)/1 var(--font-ui);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,7 +152,7 @@ h1 {
   color: rgba(255,255,255,0.35);
   font-weight: 600;
 }
-.cell.open .num { font-family: 'Inter', sans-serif; font-weight: 900; font-size: clamp(14px, 4.4vw, 21px); }
+.cell.open .num { font-family: var(--font-display); font-weight: 900; font-size: clamp(14px, 4.4vw, 21px); }
 .n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); }
 .n4 { color: var(--n4); } .n5, .n6, .n7, .n8 { color: var(--n5); }
 
@@ -225,7 +228,7 @@ h1 {
   border: 1px solid var(--gold);
   background: rgba(245,197,24,0.14);
   color: var(--gold);
-  font: 800 17px/1 'Noto Sans JP', sans-serif;
+  font: 800 17px/1 var(--font-ui);
   cursor: pointer;
 }
 .chip.sure { border-color: var(--red); background: rgba(232,67,42,0.3); color: #fff; }
@@ -240,7 +243,7 @@ h1 {
   border: 1px solid var(--line);
   background: rgba(10,22,40,0.5);
   color: var(--ink);
-  font: 700 18px/1 'Noto Sans JP', sans-serif;
+  font: 700 18px/1 var(--font-ui);
   letter-spacing: 2px;
 }
 .answer-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
@@ -373,17 +376,6 @@ footer a { color: var(--muted); }
 .cover-small { font-size: 11px; color: var(--muted); margin: 6px 0 12px; }
 .btn.big { min-height: 46px; padding: 0 34px; font-size: 16px; box-shadow: 0 6px 24px rgba(232,67,42,0.4); }
 .btn.big:hover { transform: translateY(-1px); }
-.hint-kanji {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(245,197,24,0.1);
-  border: 1px dashed rgba(245,197,24,0.5);
-  font: 800 18px/1.3 'Noto Sans JP', sans-serif;
-  letter-spacing: 2px;
-  color: var(--gold);
-}
-.hint-kanji small { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--muted); }
 .stat .value.running { color: var(--gold); }
 
 /* ===== Board knowledge ===== */
@@ -424,7 +416,7 @@ footer a { color: var(--muted); }
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 800 16px/1 'Noto Sans JP', sans-serif;
+  font: 800 16px/1 var(--font-ui);
   color: #fff;
 }
 .tile.hit { background: #2f9e57; }
@@ -471,7 +463,7 @@ footer a { color: var(--muted); }
   border: 1px solid var(--line);
   background: rgba(10,22,40,0.5);
   color: var(--ink);
-  font: 700 14px/1 'Noto Sans JP', sans-serif;
+  font: 700 14px/1 var(--font-ui);
 }
 .rank-form input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 .rank-note { font-size: 12px; color: var(--muted); margin: -6px 0 14px; min-height: 1em; }
@@ -481,7 +473,7 @@ footer a { color: var(--muted); }
 .modal-card.wide .actions { margin-top: 18px; }
 .modal-tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; margin-bottom: 16px; }
-.stat-grid .big { font: 900 22px/1.1 'Inter', sans-serif; }
+.stat-grid .big { font: 900 22px/1.1 var(--font-display); }
 .stat-grid .label { font-size: 10px; color: var(--muted); margin-top: 4px; }
 .sub-title { font-size: 11px; letter-spacing: 2px; color: var(--muted); font-weight: 700; margin: 4px 0 8px; }
 .dist-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; margin: 4px 0; font-size: 12px; }
@@ -514,7 +506,7 @@ footer a { color: var(--muted); }
 }
 .rank-list li:nth-child(odd) { background: rgba(255,255,255,0.04); }
 .rank-list li.me { background: rgba(245,197,24,0.18); box-shadow: inset 0 0 0 1px var(--gold); }
-.rank-list .pos { font: 900 14px/1 'Inter', sans-serif; color: var(--gold); text-align: center; }
+.rank-list .pos { font: 900 14px/1 var(--font-display); color: var(--gold); text-align: center; }
 .rank-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rank-list .mv { font-weight: 800; }
 .rank-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 18px 0; }
@@ -528,3 +520,30 @@ footer a { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ===== Game fonts ===== */
+/* Dela Gothic One は太さが1種類だけなので、太字の指定を外して疑似ボールドを防ぐ */
+/* 小さい漢字は潰れるので、情報欄では数字（手数・タイム）だけに使う */
+h1, .modal-head, .modal-word, .cover-title, #moves, #timer, .stat-grid .big,
+.cell.open .num, .rank-list .pos, .rank-list .mv, .topic-genre, .btn.big {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+h1 { letter-spacing: 2px; }
+.stat .value { font-weight: 800; }
+
+/* ===== Topic (genre) ===== */
+.topic {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: -4px 0 12px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(245,197,24,0.14), rgba(232,67,42,0.14));
+  border: 1px solid rgba(245,197,24,0.35);
+}
+.topic-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--muted); }
+.topic-genre { font-size: 20px; color: var(--gold); }
+.topic-len { font-size: 13px; font-weight: 800; color: var(--ink); }
