@@ -30,31 +30,8 @@ export const variants = base => {
 
 export const KANA_SET = new Set(TABLE.join('').replace(/・/g, ''));
 
-// 地雷の文字と文字数がまったく同じ単語は盤面で見分けられないので、先に出たほうだけ残す
-export function buildPool(words) {
-  const pool = [];
-  const boardKeys = new Set();
-  for (const [genre, list] of Object.entries(words)) {
-    for (const w of list.split(/\s+/)) {
-      const m = mineLetters(w);
-      if (m.length < 3 || m.length > 8 || !m.every(k => KANA_SET.has(k))) continue;
-      const key = [...m].sort().join('') + '/' + [...w].length;
-      if (boardKeys.has(key)) continue;
-      boardKeys.add(key);
-      pool.push({ w, genre });
-    }
-  }
-  return pool;
-}
-
-// ---------- seeded random / days ----------
-export const mulberry32 = a => () => {
-  a |= 0; a = a + 0x6D2B79F5 | 0;
-  let t = Math.imul(a ^ a >>> 15, 1 | a);
-  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-  return ((t ^ t >>> 14) >>> 0) / 4294967296;
-};
-export const shuffled = (arr, rnd) => {
+// ---------- random ----------
+export const shuffled = (arr, rnd = Math.random) => {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
@@ -62,12 +39,20 @@ export const shuffled = (arr, rnd) => {
   }
   return a;
 };
-export const DAY0 = Math.floor(Date.UTC(2026, 9, 9) / 86400e3);
-export const jstDay = (now = Date.now()) => Math.floor((now + 9 * 3600e3) / 86400e3);
-export const dayLabel = d => {
-  const dt = new Date(d * 86400e3);
-  return `${dt.getUTCMonth() + 1}/${dt.getUTCDate()}`;
-};
+
+// list から n 個、avoid に入っていないものを選ぶ（足りなければ avoid も使う）
+export function pickWords(list, n, avoid = new Set(), rnd = Math.random) {
+  const fresh = shuffled(list.filter(x => !avoid.has(x[0])), rnd);
+  const rest = shuffled(list.filter(x => avoid.has(x[0])), rnd);
+  return [...fresh, ...rest].slice(0, n);
+}
+
+// 1:23.4 の形。1時間を超えたら分を伸ばす
+export function formatTime(ms) {
+  const t = Math.max(0, Math.floor(ms / 100));
+  const min = Math.floor(t / 600), sec = Math.floor(t / 10) % 60, tenth = t % 10;
+  return `${min}:${String(sec).padStart(2, '0')}.${tenth}`;
+}
 
 // ---------- board ----------
 export const idx = (c, r) => c * ROWS + r;
@@ -99,9 +84,7 @@ export function neighborsOf(cells, i) {
 
 export const cellOfKana = (cells, kana) => cells.findIndex(c => c.kana === kana);
 
-// ふつう：0 のマスから周りを連鎖して開く。むずい：1マスずつ
-export const LEVELS = { normal: 'ふつう', hard: 'むずい' };
-
+// 0 のマスを開けたら周りを連鎖して開く
 // start から開くマスの一覧（地雷とすでに開いたマスは含まない）
 export function floodOpen(cells, start, alreadyOpen = []) {
   const seen = new Set(alreadyOpen), out = [], stack = [start];
@@ -148,13 +131,8 @@ export function knowledge(cells, S) {
   return { safe, mines };
 }
 
-// ---------- score ----------
-// 手数 = 開けたマス + 答えた回数。少ないほどすごい
-export const TITLES = [
-  [3, '神の一手'], [6, '名探偵'], [9, '探偵'], [13, '助手'], [Infinity, '見習い']
-];
-export const titleFor = moves => TITLES.find(([max]) => moves <= max)[1];
-export const DIST_BUCKETS = ['1-3', '4-6', '7-9', '10-13', '14+'];
-export const bucketFor = moves => DIST_BUCKETS[TITLES.findIndex(([max]) => moves <= max)];
-
 export const SHARE_MARK = { hit: '🟩', mine: '🟨', miss: '⬜' };
+
+// ---------- ranked match ----------
+export const MATCH_SIZE = 3;
+export const HINT_PENALTY_MS = 30000;

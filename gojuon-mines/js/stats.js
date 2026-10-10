@@ -1,54 +1,58 @@
-// 自分の成績（この端末の localStorage だけに残る）。ふつう・むずいで別々に数える
-import { DIST_BUCKETS, bucketFor } from './rules.js';
-
-const keyFor = level => level === 'hard' ? 'gojuon-mines:stats:hard' : 'gojuon-mines:stats';
+// 自分の成績（この端末の localStorage だけに残る）
+const KEY = 'gojuon-mines:stats2';
+const HISTORY = 10;
 
 const empty = () => ({
-  played: 0, wins: 0, streak: 0, maxStreak: 0, lastDay: null, best: null,
-  dist: Object.fromEntries(DIST_BUCKETS.map(b => [b, 0])), fails: 0,
-  genreBest: {}
+  practice: { played: 0, solved: 0, bestMoves: null },
+  ranked: { played: 0, cleared: 0, bestTime: null, bestMoves: null, recent: [] }
 });
 
-export function loadStats(level) {
+export function loadStats() {
   try {
-    const s = JSON.parse(localStorage.getItem(keyFor(level)));
-    return s ? { ...empty(), ...s, dist: { ...empty().dist, ...s.dist } } : empty();
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (!s) return empty();
+    const e = empty();
+    return { practice: { ...e.practice, ...s.practice }, ranked: { ...e.ranked, ...s.ranked } };
   } catch {
     return empty();
   }
 }
 
-const saveStats = (level, s) => { try { localStorage.setItem(keyFor(level), JSON.stringify(s)); } catch {} };
+const saveStats = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
 
-// 今日のお題：連続記録と分布。フリープレイ：ジャンル別のベストだけ
-export function recordResult({ level, mode, day, won, moves, genre }) {
-  const s = loadStats(level);
-  const genreBest = won && (s.genreBest[genre] == null || moves < s.genreBest[genre])
-    ? { ...s.genreBest, [genre]: moves } : s.genreBest;
-  if (mode !== 'daily') {
-    const next = { ...s, genreBest };
-    saveStats(level, next);
-    return next;
-  }
-  const streak = won ? (s.lastDay === day - 1 ? s.streak + 1 : 1) : 0;
+export function recordPractice({ won, moves }) {
+  const s = loadStats();
+  const p = s.practice;
   const next = {
     ...s,
-    genreBest,
-    played: s.played + 1,
-    wins: s.wins + (won ? 1 : 0),
-    streak,
-    maxStreak: Math.max(s.maxStreak, streak),
-    lastDay: won ? day : s.lastDay,
-    best: won && (s.best == null || moves < s.best) ? moves : s.best,
-    dist: won ? { ...s.dist, [bucketFor(moves)]: s.dist[bucketFor(moves)] + 1 } : s.dist,
-    fails: s.fails + (won ? 0 : 1)
+    practice: {
+      played: p.played + 1,
+      solved: p.solved + (won ? 1 : 0),
+      bestMoves: won && (p.bestMoves == null || moves < p.bestMoves) ? moves : p.bestMoves
+    }
   };
-  saveStats(level, next);
+  saveStats(next);
   return next;
 }
 
-// 連続記録は、昨日も今日もクリアしていなければ途切れている
-export const liveStreak = (s, today) => (s.lastDay === today || s.lastDay === today - 1 ? s.streak : 0);
+// cleared: 3問とも解けたとき。timeMs と moves はそのときだけ意味がある
+export function recordMatch({ cleared, timeMs, moves }) {
+  const s = loadStats();
+  const r = s.ranked;
+  const better = cleared && (r.bestTime == null || timeMs < r.bestTime || (timeMs === r.bestTime && moves < r.bestMoves));
+  const next = {
+    ...s,
+    ranked: {
+      played: r.played + 1,
+      cleared: r.cleared + (cleared ? 1 : 0),
+      bestTime: better ? timeMs : r.bestTime,
+      bestMoves: better ? moves : r.bestMoves,
+      recent: cleared ? [...r.recent, { timeMs, moves }].slice(-HISTORY) : r.recent
+    }
+  };
+  saveStats(next);
+  return { stats: next, newBest: better };
+}
 
 export const NAME_KEY = 'gojuon-mines:name';
 export const loadName = () => { try { return localStorage.getItem(NAME_KEY) || ''; } catch { return ''; } };

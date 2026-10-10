@@ -1,10 +1,11 @@
-// 今日のお題のランキング（Supabase）。ライブラリを使わず REST を直接たたく
+// ランクマッチ（3問のタイム）のランキング（Supabase）。ライブラリを使わず REST を直接たたく
 // url と key はブラウザ公開用（Compile と同じプロジェクト）。service_role key は絶対に書かない
 const CONFIG = {
   url: 'https://nkmyhflfdkrrlahyemyn.supabase.co',
   key: 'sb_publishable_pInYvRWiso5cvZMnZnEhgw_foOjy3mC'
 };
-const TABLE = 'gojuon_daily_scores';
+const TABLE = 'gojuon_rank_scores';
+const BEST = 'gojuon_rank_best'; // 1人1行（ベスト記録）のビュー
 const AUTH_KEY = 'gojuon-mines:auth';
 const TIMEOUT_MS = 8000;
 
@@ -70,23 +71,20 @@ async function session() {
 export const myUserId = () => (loadAuth() || {}).userId || null;
 
 // ---------- スコア ----------
-// 1日1回だけ。2回目は already: true を返す
-export async function submitScore({ day, name, moves, lives, won }) {
+export async function submitScore({ name, timeMs, moves }) {
   const auth = await session();
   const res = await request(`/rest/v1/${TABLE}`, {
     method: 'POST',
     token: auth.token,
     headers: { Prefer: 'return=minimal' },
-    body: { day, name, moves, lives, won }
+    body: { name, time_ms: Math.round(timeMs), moves }
   });
-  if (res.status === 409) return { already: true };
-  if (!res.ok) throw new RankingError('ランキングに登録できませんでした');
-  return { already: false };
+  if (!res.ok) throw new RankingError('ランキングに登録できませんでした（少し待ってからもう一度）');
 }
 
 async function count(query) {
-  // 空の日に Range ヘッダーだと 416 を返す版があるので、limit で絞る
-  const res = await request(`/rest/v1/${TABLE}?select=user_id&limit=1&${query}`, {
+  // 空のときに Range ヘッダーだと 416 を返す版があるので、limit で絞る
+  const res = await request(`/rest/v1/${BEST}?select=user_id&limit=1&${query}`, {
     method: 'HEAD',
     headers: { Prefer: 'count=exact' }
   });
@@ -95,18 +93,25 @@ async function count(query) {
   return Number.isFinite(total) ? total : 0;
 }
 
-// 正解した人を 手数 → 残りライフ → 早い順 で並べる
-export async function fetchTop(day, limit = 30) {
-  const q = `select=user_id,name,moves,lives&day=eq.${day}&won=is.true&order=moves.asc,lives.desc,created_at.asc&limit=${limit}`;
-  const res = await request(`/rest/v1/${TABLE}?${q}`);
+// タイムが短い順、同じタイムなら手数が少ない順（1人1行）
+export async function fetchTop(limit = 30) {
+  const q = `select=user_id,name,time_ms,moves&order=time_ms.asc,moves.asc,created_at.asc&limit=${limit}`;
+  const res = await request(`/rest/v1/${BEST}?${q}`);
   if (!res.ok) throw new RankingError('ランキングを読み込めませんでした');
   return res.json();
 }
 
-// 自分より上の人数と、参加者の総数
-export async function fetchStanding(day, { moves, lives, won }) {
-  const total = await count(`day=eq.${day}`);
-  if (!won) return { rank: null, total };
-  const better = await count(`day=eq.${day}&won=is.true&or=(moves.lt.${moves},and(moves.eq.${moves},lives.gt.${lives}))`);
-  return { rank: better + 1, total };
+// 自分のベスト記録と順位。まだ登録していなければ null
+export async function fetchMyStanding() {
+  const me = myUserId();
+  if (!me) return null;
+  const res = await request(`/rest/v1/${BEST}?select=time_ms,moves&user_id=eq.${encodeURIComponent(me)}`);
+  if (!res.ok) throw new RankingError('ランキングを読み込めませんでした');
+  const [best] = await res.json();
+  if (!best) return null;
+  const [better, total] = await Promise.all([
+    count(`or=(time_ms.lt.${best.time_ms},and(time_ms.eq.${best.time_ms},moves.lt.${best.moves}))`),
+    count('')
+  ]);
+  return { rank: better + 1, total, timeMs: best.time_ms, moves: best.moves };
 }

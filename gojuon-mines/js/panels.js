@@ -1,7 +1,6 @@
 // 成績とランキングの中身を組み立てる。名前はサーバーから来るので必ず textContent で入れる
-import { DIST_BUCKETS, LEVELS, dayLabel } from './rules.js';
-import { liveStreak } from './stats.js';
-import { fetchTop, myUserId, RankingError } from './ranking.js';
+import { formatTime } from './rules.js';
+import { fetchTop, fetchMyStanding, myUserId, RankingError } from './ranking.js';
 
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
@@ -16,46 +15,48 @@ function statCell(value, label) {
   return d;
 }
 
-// highlight: 今日の結果が入った分布の区切り（なければ null）
-export function renderStats(root, stats, today, highlight, level) {
+export function renderStats(root, stats) {
   root.replaceChildren();
-  const rate = stats.played ? Math.round(stats.wins / stats.played * 100) : 0;
-  const grid = el('div', 'stat-grid');
-  grid.append(
-    statCell(stats.played, '遊んだ'),
-    statCell(`${rate}%`, '正解率'),
-    statCell(liveStreak(stats, today), '連続正解'),
-    statCell(stats.maxStreak, '最長連続')
+  const r = stats.ranked, p = stats.practice;
+
+  const rankGrid = el('div', 'stat-grid');
+  rankGrid.append(
+    statCell(r.played, '挑戦'),
+    statCell(r.cleared, '完走'),
+    statCell(r.bestTime != null ? formatTime(r.bestTime) : '-', 'ベスト'),
+    statCell(r.bestMoves != null ? `${r.bestMoves}手` : '-', 'そのときの手数')
   );
-  root.append(el('div', 'sub-title', `今日のお題の成績（${LEVELS[level]}）`), grid);
+  root.append(el('div', 'sub-title', 'ランクマッチ（3問のタイム）'), rankGrid);
 
-  root.append(el('div', 'sub-title', `手数の分布${stats.best != null ? `（ベスト ${stats.best}手）` : ''}`));
-  const rows = [...DIST_BUCKETS.map(b => [`${b}手`, stats.dist[b], b === highlight]), ['失敗', stats.fails, false]];
-  const max = Math.max(1, ...rows.map(r => r[1]));
-  for (const [label, n, me] of rows) {
-    const row = el('div', 'dist-row');
-    const bar = el('div', 'dist-bar' + (me ? ' me' : ''), String(n));
-    bar.style.width = `${Math.max(8, n / max * 100)}%`;
-    row.append(el('span', null, label), bar);
-    root.append(row);
+  if (r.recent.length) {
+    root.append(el('div', 'sub-title', `最近の完走タイム（${r.recent.length}回）`));
+    const max = Math.max(...r.recent.map(x => x.timeMs));
+    for (const x of [...r.recent].reverse()) {
+      const row = el('div', 'dist-row');
+      const bar = el('div', 'dist-bar' + (x.timeMs === r.bestTime ? ' me' : ''), formatTime(x.timeMs));
+      bar.style.width = `${Math.max(30, x.timeMs / max * 100)}%`;
+      row.append(el('span', null, `${x.moves}手`), bar);
+      root.append(row);
+    }
   }
 
-  const genres = Object.entries(stats.genreBest);
-  if (genres.length) {
-    root.append(el('div', 'sub-title', 'ジャンル別ベスト（フリープレイ含む）'));
-    const list = el('div', 'genre-list');
-    for (const [g, m] of genres) list.append(el('span', null, g), el('span', null, `${m}手`));
-    root.append(list);
-  }
+  const practiceGrid = el('div', 'stat-grid');
+  practiceGrid.append(
+    statCell(p.played, '遊んだ'),
+    statCell(p.solved, '正解'),
+    statCell(p.played ? `${Math.round(p.solved / p.played * 100)}%` : '-', '正解率'),
+    statCell(p.bestMoves != null ? `${p.bestMoves}手` : '-', 'ベスト手数')
+  );
+  root.append(el('div', 'sub-title', '練習'), practiceGrid);
 }
 
-export async function renderRanking(root, day) {
+export async function renderRanking(root) {
   root.replaceChildren(
-    el('div', 'sub-title', `むずいモード ${dayLabel(day)}のお題・正解した人を手数の少ない順に`),
+    el('div', 'sub-title', 'ランクマッチ・3問を解き終えるまでのタイム（1人1つ、ベスト記録）'),
     el('div', 'rank-empty', '読み込み中…'));
-  let rows;
+  let rows, mine;
   try {
-    rows = await fetchTop(day);
+    [rows, mine] = await Promise.all([fetchTop(), fetchMyStanding()]);
   } catch (e) {
     root.lastChild.textContent = e instanceof RankingError ? e.message : 'ランキングを読み込めませんでした';
     return;
@@ -68,14 +69,15 @@ export async function renderRanking(root, day) {
   const list = el('ol', 'rank-list');
   let pos = 0, prev = null;
   rows.forEach((r, k) => {
-    // 手数とライフが同じなら同じ順位
-    const key = `${r.moves}/${r.lives}`;
+    // タイムと手数が同じなら同じ順位
+    const key = `${r.time_ms}/${r.moves}`;
     if (key !== prev) pos = k + 1;
     prev = key;
     const li = el('li', r.user_id === me ? 'me' : null);
-    li.append(el('span', 'pos', String(pos)), el('span', 'nm', r.name), el('span', 'mv', `${r.moves}手`),
-      el('span', null, '❤️'.repeat(r.lives)));
+    li.append(el('span', 'pos', String(pos)), el('span', 'nm', r.name),
+      el('span', 'mv', formatTime(r.time_ms)), el('span', null, `${r.moves}手`));
     list.append(li);
   });
   root.lastChild.replaceWith(list);
+  if (mine) root.append(el('div', 'rank-note', `あなたのベスト：${mine.rank}位 / ${mine.total}人中（${formatTime(mine.timeMs)}・${mine.moves}手）`));
 }

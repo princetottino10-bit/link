@@ -1,11 +1,11 @@
-// node --test gojuon-mines/tests
+// node --test gojuon-mines/tests/rules.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  baseKana, mineLetters, variants, buildPool, buildCells, neighborsOf, cellOfKana, floodOpen,
-  checkAnswerShape, judgeGuess, knowledge, titleFor, bucketFor, jstDay, DAY0, dayLabel
+  baseKana, mineLetters, variants, buildCells, neighborsOf, cellOfKana, floodOpen,
+  checkAnswerShape, judgeGuess, knowledge, pickWords, formatTime, KANA_SET
 } from '../js/rules.js';
-import { WORDS } from '../js/words.js';
+import { LONG_WORDS } from '../js/long-words.js';
 
 test('baseKana は濁点・半濁点・小文字を元の文字に戻す', () => {
   assert.equal(baseKana('が'), 'か');
@@ -26,23 +26,22 @@ test('variants は小文字・濁点・半濁点の順', () => {
   assert.deepEqual(variants('ん'), ['ん']);
 });
 
-test('buildPool は盤面が同じになる単語を1つにまとめる', () => {
-  const pool = buildPool({ a: 'ぶどう とうふ', b: 'かかと きりん' });
-  assert.deepEqual(pool.map(p => p.w), ['ぶどう', 'きりん']);
-});
-
-test('本番のお題に盤面の重複がない', () => {
-  const pool = buildPool(WORDS);
-  const keys = pool.map(p => mineLetters(p.w).sort().join('') + [...p.w].length);
-  assert.equal(new Set(keys).size, keys.length);
-  assert.ok(pool.length >= 200);
+test('お題は 7〜10 文字で、同じ文字を2回使わず、全部盤面にある', () => {
+  assert.ok(LONG_WORDS.length >= 150);
+  for (const [w, kanji] of LONG_WORDS) {
+    const len = [...w].length;
+    assert.ok(len >= 7 && len <= 10, w);
+    assert.equal(mineLetters(w).length, len, w);
+    assert.ok(mineLetters(w).every(k => KANA_SET.has(k)), w);
+    assert.ok(kanji && !/[0-9０-９]/.test(kanji), w);
+  }
+  assert.equal(new Set(LONG_WORDS.map(x => x[0])).size, LONG_WORDS.length);
 });
 
 test('buildCells の数字は周り8マスの地雷の数', () => {
   const cells = buildCells('あいう');
   assert.equal(cells.filter(c => c.mine).length, 3);
-  const ka = cellOfKana(cells, 'か');
-  assert.equal(cells[ka].n, 2); // か の隣の地雷は あ い（う は2段下なので数えない）
+  assert.equal(cells[cellOfKana(cells, 'か')].n, 2); // か の隣の地雷は あ い（う は2段下なので数えない）
   assert.equal(cells[cellOfKana(cells, 'け')].n, 1); // け の斜め上が う
   assert.equal(cells[cellOfKana(cells, 'ま')].n, 0);
   assert.equal(neighborsOf(cells, cellOfKana(cells, 'ん')).length, 1); // ん の隣は わ だけ
@@ -55,11 +54,9 @@ test('floodOpen は 0 のマスから連鎖し、地雷と開いたマスは含�
   assert.ok(out.length > 10);
   assert.ok(out.every(i => !cells[i].mine));
   assert.ok(out.includes(cellOfKana(cells, 'ん')));
-  // 数字のマスからは広がらない
   const ka = cellOfKana(cells, 'か');
-  assert.deepEqual(floodOpen(cells, ka), [ka]);
-  // すでに開いたマスは返さない
-  assert.ok(!floodOpen(cells, ma, [ma]).length);
+  assert.deepEqual(floodOpen(cells, ka), [ka]); // 数字のマスからは広がらない
+  assert.ok(!floodOpen(cells, ma, [ma]).length); // すでに開いたマスは返さない
 });
 
 test('checkAnswerShape は文字数違いとひらがな以外をはじく', () => {
@@ -88,16 +85,15 @@ test('knowledge は 0 の周りと誤答の miss を安全、誤答の地雷を�
   assert.ok(!safe.has(ma));
 });
 
-test('称号と分布の区切りがそろっている', () => {
-  assert.equal(titleFor(1), '神の一手');
-  assert.equal(titleFor(6), '名探偵');
-  assert.equal(titleFor(40), '見習い');
-  assert.equal(bucketFor(3), '1-3');
-  assert.equal(bucketFor(14), '14+');
+test('pickWords は重ならず、避けたい言葉を後回しにする', () => {
+  const list = [['あ'], ['い'], ['う'], ['え']];
+  const got = pickWords(list, 3, new Set(['あ', 'い']));
+  assert.equal(new Set(got.map(x => x[0])).size, 3);
+  assert.ok(got.slice(0, 2).every(x => !['あ', 'い'].includes(x[0])));
 });
 
-test('日本時間の日付', () => {
-  assert.equal(jstDay(Date.UTC(2026, 9, 8, 15, 0)), DAY0); // 10/9 0:00 JST
-  assert.equal(jstDay(Date.UTC(2026, 9, 8, 14, 59)), DAY0 - 1);
-  assert.equal(dayLabel(DAY0), '10/9');
+test('formatTime は 分:秒.1/10秒', () => {
+  assert.equal(formatTime(0), '0:00.0');
+  assert.equal(formatTime(83456), '1:23.4');
+  assert.equal(formatTime(3725000), '62:05.0');
 });
