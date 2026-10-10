@@ -19,7 +19,7 @@
   window.App = App;
 
   function freshTransient() {
-    return { modal: null, logOpen: false, planSel: null, planBase: null, planRefresh: false, pick: null, pickCard: null, draftFocus: null, form: null, error: null };
+    return { tut: null, tutStart: false, modal: null, logOpen: false, planSel: null, planBase: null, planRefresh: false, pick: null, pickCard: null, draftFocus: null, form: null, error: null };
   }
 
   // ---------- 保存 ----------
@@ -260,7 +260,13 @@
     const num = k => (el.dataset[k] != null ? Number(el.dataset[k]) : null);
     switch (act) {
       case 'toggle-bot': { const i = num('seat'); T.form.bots[i] = !T.form.bots[i]; break; }
-      case 'start': startGame(T.form.names, T.form.bots); return;
+      case 'start':
+        if (!window.Tutorial.seen()) { T.tut = 0; T.tutStart = true; break; }
+        startGame(T.form.names, T.form.bots); return;
+      case 'tut-next': T.tut++; break;
+      case 'tut-prev': T.tut = Math.max(0, T.tut - 1); break;
+      case 'tut-close': window.Tutorial.markSeen(); T.tut = null; break;
+      case 'tut-start': window.Tutorial.markSeen(); T.tut = null; startGame(T.form.names, T.form.bots); return;
       case 'resume': App.S = loadSaved(); App.T = freshTransient(); commit(); return;
       case 'quit':
         if (!window.confirm('ゲームをやめてタイトルに戻りますか？（今のゲームは消えます）')) return;
@@ -293,12 +299,12 @@
       case 'replay-next': replay(false); return;
       case 'replay-skip': replay(true); return;
       case 'replay-all': T.replayAll = !T.replayAll; break;
-      case 'help': T.modal = { type: 'help' }; break;
+      case 'help': T.tut = 0; T.tutStart = false; break;
       case 'next': nextFromResult(); return;
       case 'card': T.modal = { type: 'card', uid: num('uid'), bi: num('bi') }; break;
       case 'objective': T.modal = { type: 'objective', seat: num('seat') }; break;
       case 'log': T.logOpen = true; break;
-      case 'close': T.modal = null; T.logOpen = false; break;
+      case 'close': T.modal = null; T.logOpen = false; if (T.tut != null) { window.Tutorial.markSeen(); T.tut = null; } break;
       default: return;
     }
     App.render();
@@ -315,7 +321,7 @@
     if (el.dataset && el.dataset.name != null && App.T.form) App.T.form.names[Number(el.dataset.name)] = el.value;
   });
   document.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape' && (App.T.modal || App.T.logOpen)) { App.T.modal = null; App.T.logOpen = false; App.render(); }
+    if (ev.key === 'Escape' && (App.T.modal || App.T.logOpen || App.T.tut != null)) { App.T.modal = null; App.T.logOpen = false; App.T.tut = null; App.render(); }
   });
 
   // ---------- 起動 ----------

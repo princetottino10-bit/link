@@ -85,7 +85,27 @@
     }
     return `<div class="cd f-${def.faction}"><div class="cd-head"><span class="cd-val">${def.value}</span>` +
       `<h3>${esc(def.name)}</h3>${factionChip(D, def.faction)}</div>${loc}` +
-      `<p class="cd-text">${esc(def.text)}</p>${status}</div>`;
+      `<p class="cd-text">${esc(def.text)}</p>${glossary(def.text)}${status}</div>`;
+  }
+
+  // カード文に出てくる用語の説明
+  const GLOSSARY = [
+    ['【登場】', '公開して表にしたとき、1 回だけ起きる'],
+    ['【常時】', '表向きの間ずっと効いている（上に別のカードが重なっても有効）'],
+    ['【破壊時】', 'この基地が採点されたときに起きる（表向きのときだけ）'],
+    ['裏向き', '中身を伏せた状態。値は 2、効果なし'],
+    ['表向き', '中身を見せた状態。書かれた値と効果がある'],
+    ['手札に戻す', '場のカードを持ち主の手札に返す。その分、基地の合計が減る'],
+    ['移動', '同じ持ち主の、別の基地の列に移す'],
+    ['他人', '自分以外のプレイヤー'],
+    ['捨て札', '使い終わったカードの置き場。山札が切れたら混ぜて山札に戻る'],
+    ['リフレッシュ', 'カードを置かず、手札が 5 枚になるまで引く'],
+    ['得点が最も高い', 'いま VP が一番多い人（同点なら全員）'],
+  ];
+  function glossary(text) {
+    const hits = GLOSSARY.filter(([w]) => text.includes(w));
+    if (!hits.length) return '';
+    return `<dl class="gloss">${hits.map(([w, d]) => `<dt>${esc(w)}</dt><dd>${esc(d)}</dd>`).join('')}</dl>`;
   }
 
   function blockText(D, why, names) {
@@ -121,17 +141,20 @@
         bi, value: E.cardValue(D, view, bi, c), covered: i < st.length - 1,
         selected: o.highlight && o.highlight.includes(c.uid),
       })).join('');
+      const who = o.names ? esc(o.viewer === s ? 'あなた' : o.names[s]) : '';
       return `<div class="col s${s}${o.viewer === s ? ' is-me' : ''}">` +
-        `<div class="col-head">${seatBadge(s)}<span class="col-sum">${totals[s]}</span></div>` +
-        `<div class="col-rank">${has ? `<b>${r + 1}位</b><i>+${proj[s]}</i>` : '<span class="dim">—</span>'}</div>` +
+        `<div class="col-who">${seatBadge(s)}<span>${who}</span></div>` +
+        `<div class="col-head"><small>合計</small><span class="col-sum">${totals[s]}</span></div>` +
+        `<div class="col-rank">${has ? `今<b>${r + 1}位</b><i>+${proj[s]}VP</i>` : '<span class="dim">置いてない</span>'}</div>` +
         `<div class="stack">${cards}</div></div>`;
     }).join('');
     return `<section class="base${hot ? ' is-hot' : ''}${o.selectedBase === bi ? ' is-target' : ''}" aria-label="${esc(bdef.name)}">` +
       `<header class="base-head"><h2>${esc(bdef.name)}</h2>` +
-      `<div class="bp"><span class="bp-now">${total}</span><span class="bp-max">/${bdef.bp}</span></div></header>` +
+      `<div class="bp"><small>合計</small><span class="bp-now">${total}</span><small>/ 耐久</small><span class="bp-max">${bdef.bp}</span></div></header>` +
       `<div class="meter"><span style="width:${pct}%"></span></div>` +
-      `<div class="base-info"><span class="vpl">VP ${bdef.vp.map((v, i) => `<i>${i + 1}位${v}</i>`).join('')}</span>` +
-      `<span class="tags">表OK ${bdef.tags.map(t => factionChip(D, t)).join('')}</span></div>` +
+      `<p class="bp-left">${hot ? '<b>耐久に届いた → このラウンドの終わりに採点</b>' : `あと <b>${bdef.bp - total}</b> で採点`}</p>` +
+      `<div class="base-info"><span class="vpl">採点でもらえるVP ${bdef.vp.map((v, i) => `<i>${i + 1}位 ${v}</i>`).join('')}</span>` +
+      `<span class="tags">表にできる派閥 ${bdef.tags.map(t => factionChip(D, t)).join('')}</span></div>` +
       (bdef.text ? `<p class="base-rule">${esc(bdef.text)}</p>` : '') +
       `<div class="cols">${cols}</div>${place}</section>`;
   }
@@ -180,7 +203,7 @@
   }
 
   root.UI = {
-    groupFrames,
+    groupFrames, glossary,
     SEAT_MARKS, FACTION_GLYPH, esc, seatBadge, factionChip, nameize,
     miniCard, handCard, cardDetail, blockText, board, baseBlock, playersBar, logList,
   };

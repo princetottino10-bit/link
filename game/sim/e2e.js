@@ -50,6 +50,13 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
   }
   await shot('01-title');
   await click('[data-act="start"]');
+  // 初回は遊び方が出る。全ページを見てから始める
+  for (let pg = 1; await count('[data-act="tut-next"]'); pg++) {
+    await page.waitForTimeout(250);
+    await shot(`00-tutorial-${pg}`);
+    await click('[data-act="tut-next"]');
+  }
+  if (await count('[data-act="tut-start"]')) { await page.waitForTimeout(250); await shot('00-tutorial-5'); await click('.tut-nav [data-act="tut-start"]'); }
 
   let rounds = new Set(), steps = 0, choices = {}, replays = 0;
   for (; steps < 5000; steps++) {

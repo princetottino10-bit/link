@@ -60,6 +60,7 @@
       <ol class="seats">${rows}</ol>
       <button type="button" class="btn primary big" data-act="start">${saved ? '新しいゲームを始める' : 'ゲームを始める'}</button>
       <p class="hint center">人間 ${humans} 人 ／ ボット ${4 - humans} 人</p></section>
+      <button type="button" class="btn" data-act="help">遊び方を見る（1 分）</button>
       <p class="foot"><a href="RULES.md" target="_blank" rel="noopener">ルールブック</a> ・ <a href="CARDS.md" target="_blank" rel="noopener">カードリスト</a></p>
     </main>`;
   }
@@ -141,7 +142,7 @@
     let dock;
     if (sel) {
       const def = D.cards[sel.cid];
-      dock = `<div class="dock-detail f-${def.faction}"><b>${def.value} ${esc(def.name)}</b><span>${esc(def.text)}</span></div>` +
+      dock = `<div class="dock-detail f-${def.faction}"><b>${def.value} ${esc(def.name)}</b><span>${esc(def.text)}</span>${UI.glossary(def.text)}</div>` +
         (T.planBase == null ? '<p class="dock-hint">↑ 伏せる基地を選ぶ（各基地の下のボタン）</p>'
           : `<p class="dock-hint">「${esc(def.name)}」を <b>${esc(D.bases[view.bases[T.planBase].id].name)}</b> に伏せる</p>`);
     } else if (T.planRefresh) {
@@ -154,7 +155,7 @@
       <main class="screen play-screen">
         <div class="mine"><button type="button" class="objchip" data-act="objective" data-seat="${seat}">目標：${esc(o.name)}</button>
           <span class="myfac">${me.factions.map(f => factionChip(D, f)).join('')}</span></div>
-        ${UI.board(D, E, view, { viewer: seat, selectCard: sel, selectedBase: T.planBase })}
+        ${UI.board(D, E, view, { names: S.names, viewer: seat, selectCard: sel, selectedBase: T.planBase })}
       </main>
       <footer class="dock">
         <div class="hand" aria-label="手札">${me.hand.map(c => UI.handCard(D, c, c.uid === T.planSel)).join('') || '<span class="dim">手札がない</span>'}</div>
@@ -211,7 +212,7 @@
         const def = D.cards[E.findCard(g.head.state, m.uid).card.cid];
         title = `${name(m.seat)} が<b>「${esc(def.name)}」</b>を表で公開`;
         body = `<div class="reveal-card f-${def.faction}"><span class="rc-val">${def.value}</span><div><b>${esc(def.name)}</b>` +
-          `<small>${baseNm} に置いた ・ ${esc(D.factions[def.faction].name)}</small><p>${esc(def.text)}</p></div></div>`;
+          `<small>${baseNm} に置いた ・ ${esc(D.factions[def.faction].name)}</small><p>${esc(def.text)}</p>${UI.glossary(def.text)}</div></div>`;
       } else {
         const mine = viewer === m.seat && c && c.cid;
         title = `${name(m.seat)} は<b>裏向きのまま</b>公開`;
@@ -233,8 +234,8 @@
     }
     const after = g.rest.map(f => `<li>${UI.nameize(f.state.log[f.line], S.names)}</li>`).join('');
     const boardHtml = T.replayAll || focus == null
-      ? (T.replayAll ? UI.board(D, E, view, { viewer: viewer >= 0 ? viewer : null, highlight: hl }) : '')
-      : UI.baseBlock(D, E, view, focus, { viewer: viewer >= 0 ? viewer : null, highlight: hl });
+      ? (T.replayAll ? UI.board(D, E, view, { names: S.names, viewer: viewer >= 0 ? viewer : null, highlight: hl }) : '')
+      : UI.baseBlock(D, E, view, focus, { names: S.names, viewer: viewer >= 0 ? viewer : null, highlight: hl });
     return `${UI.playersBar(view, S.names, { viewer: viewer >= 0 ? viewer : null, phase: '公開フェーズ' })}
       <main class="screen play-screen replay-screen">
         <section class="rp-card${m.kind === 'score' ? ' is-score' : ''}" aria-live="polite">
@@ -266,7 +267,7 @@
     return `${UI.playersBar(view, S.names, { viewer: secret ? p.seat : null, phase: '公開フェーズ' })}
       <main class="screen play-screen">
         <section class="ticker"><h2>このラウンド</h2>${recent.length ? UI.logList(recent.slice(-6), S.names) : '<p class="dim">公開が始まった。</p>'}</section>
-        ${UI.board(D, E, view, { viewer: secret ? p.seat : null, highlight: p.kind === 'terraform' ? [] : highlight })}
+        ${UI.board(D, E, view, { names: S.names, viewer: secret ? p.seat : null, highlight: p.kind === 'terraform' ? [] : highlight })}
       </main>
       <footer class="dock dock-choice">
         <p class="who">${seatBadge(p.seat, S.names)}さんの選択${secret ? '<span class="secret">本人だけ</span>' : ''}</p>
@@ -325,7 +326,7 @@
       E.findCard(probe, c.uid).card.faceUp = true;
       const vUp = E.cardValue(D, probe, f.bi, E.findCard(probe, c.uid).card);
       return `<div class="reveal-card f-${def.faction}"><span class="rc-val">${def.value}</span><div><b>${esc(def.name)}</b>` +
-        `<small>${esc(D.bases[full.bases[f.bi].id].name)} に置いたカード</small><p>${esc(def.text)}</p></div></div>
+        `<small>${esc(D.bases[full.bases[f.bi].id].name)} に置いたカード</small><p>${esc(def.text)}</p>${UI.glossary(def.text)}</div></div>
         <div class="opts two">${opt(0, `<b>表にする</b><span>値 ${vUp}・効果が出る</span>`, 'up')}${opt(1, `<b>裏のまま</b><span>値 ${vDown}・中身は秘密</span>`, 'down')}</div>${okBtn}`;
     }
     if (p.kind === 'smoke') {
@@ -396,7 +397,7 @@
         <section class="panel"><h2 class="panel-h">得点</h2>${vpTable(App, before, after)}</section>
         <section class="panel"><h2 class="panel-h">起きたこと</h2>${UI.logList(lines, S.names)}</section>
         <button type="button" class="btn primary big" data-act="next">${after.over ? '最終結果へ（目標を公開）' : `ラウンド ${after.round} へ`}</button>
-        ${after.over ? '' : `<h2 class="sec-h">次のラウンドの基地</h2>${UI.board(D, E, view, {})}`}
+        ${after.over ? '' : `<h2 class="sec-h">次のラウンドの基地</h2>${UI.board(D, E, view, { names: S.names,})}`}
       </main>`;
   }
 
@@ -452,12 +453,13 @@
 
   function overlays(App) {
     const S = App.S, D = App.D, T = App.T;
+    if (T.tut != null && !(S && S.gate)) {
+      return `<div class="overlay" data-act="close"><div class="sheet sheet-tall" role="dialog" aria-modal="true">${root.Tutorial.body(App)}</div></div>`;
+    }
     if (!S || S.gate) return '';
     const cv = currentView(App);
     let inner = '';
-    if (T.modal && T.modal.type === 'help') {
-      inner = HELP;
-    } else if (T.logOpen && cv) {
+    if (T.logOpen && cv) {
       inner = `<h2 class="sheet-h">行動ログ</h2>${UI.logList(cv.view.log, S.names)}`;
     } else if (T.modal && T.modal.type === 'objective' && cv && cv.viewer === T.modal.seat) {
       const o = D.objectives[S.game.players[T.modal.seat].objective];
@@ -473,14 +475,6 @@
     return `<div class="overlay" data-act="close"><div class="sheet" role="dialog" aria-modal="true">${inner}` +
       `<button type="button" class="btn sheet-close" data-act="close">閉じる</button></div></div>`;
   }
-
-  const HELP = `<h2 class="sheet-h">ざっくりルール</h2><ol class="help">
-    <li><b>毎ラウンド</b>：全員が同時に、手札 1 枚を好きな基地に<b>伏せて</b>置く（またはリフレッシュで手札を 5 枚まで補充）。</li>
-    <li><b>公開</b>：「先」マークの人から順に公開。基地の「表OK」の派閥なら<b>表</b>にできて効果が出る。<b>裏</b>のままなら値 2・効果なし。</li>
-    <li><b>採点</b>：基地の合計が耐久値（右上の 7/11 の 11）に届くと採点。自分の列の合計が多い順に 1〜4 位の VP がもらえる。</li>
-    <li>各基地の列の上の数字が自分の合計、その下が<b>今採点されたら</b>の順位と VP。</li>
-    <li><b>8 ラウンド</b>で終わり。最後に全部の基地を採点し、秘密の目標（達成で +3）を足して VP が多い人の勝ち。</li>
-    <li>カードをタップすると効果文が大きく出る。上の「ログ」で今までの出来事が見られる。</li></ol>`;
 
   function loadError(msg) {
     return `<main class="screen load-error"><h1>カードデータを読み込めませんでした</h1><p>${esc(msg)}</p>

@@ -447,3 +447,33 @@ details.panel summary { font-weight: 700; cursor: pointer; }
 .help { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; }
 .tb-log + .tb-log { margin-left: -4px; }
 @keyframes pulse { to { outline-color: var(--blue); } }
+
+/* ---------- 読みやすさ（ラベル付き）・用語・遊び方 ---------- */
+.bp small, .col-head small { font-family: var(--font-body); font-size: 10px; font-weight: 700; color: var(--ink-2); margin: 0 3px; }
+.bp-left { margin: 0 0 6px; font-size: 12px; color: var(--ink-2); }
+.bp-left b { color: var(--ink); }
+.base.is-hot .bp-left b { color: var(--ng); }
+.col-who { display: flex; align-items: center; gap: 1px; font-size: 11px; font-weight: 700; min-width: 0; }
+.col-who span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-head { justify-content: flex-start; align-items: baseline; }
+.col-head small { margin: 0 3px 0 0; }
+.col-rank { font-size: 10.5px; justify-content: flex-start; gap: 3px; flex-wrap: wrap; }
+.gloss { margin: 8px 0 0; padding: 6px 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: 12px; background: var(--paper); border-radius: var(--r-s); }
+.gloss dt { font-weight: 700; white-space: nowrap; }
+.gloss dd { margin: 0; color: var(--ink-2); }
+.sheet-tall { min-height: 70dvh; }
+.tut { display: grid; gap: 10px; }
+.tut-title { font-family: var(--font-disp); font-weight: 400; font-size: 22px; }
+.tut-body { display: grid; gap: 8px; font-size: 15px; }
+.tut-body p { margin: 0; }
+.tut-note { font-size: 13px; color: var(--ink-2); padding: 6px 10px; border-left: 4px solid var(--hl); background: var(--card); }
+.tut-points { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 14px; }
+.tut-hand { display: flex; gap: 8px; }
+.tut-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tut-cards .mini { width: 64px; height: 46px; }
+.tut-cards p { font-size: 13px; margin: 6px 0 0; }
+.tut-dots { display: flex; justify-content: center; gap: 6px; }
+.tut-dots span { width: 8px; height: 8px; border-radius: 999px; border: 1.5px solid var(--ink); }
+.tut-dots span.on { background: var(--ink); }
+.tut-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+.tut .base { pointer-events: none; }
