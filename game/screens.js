@@ -160,7 +160,7 @@
       dock += `<div class="dock-detail f-${def.faction}"><b>${def.value} ${esc(def.name)}</b><span>${esc(def.text)}</span>${UI.glossary(def.text)}</div>` +
         '<p class="dock-hint">↑ 伏せる基地を選ぶ（各基地の下の「ここに伏せる」）</p>';
     } else if (T.planRefresh) {
-      dock += '<p class="dock-hint">リフレッシュ：何も置かず、公開のときに手札が 5 枚になるまで引く。</p>';
+      dock += `<p class="dock-hint">リフレッシュ：伏せずに、公開の前に手札が 5 枚になるまで引く。${me.hand.length ? '' : '手札が 0 枚なので、引いたあと 1 枚を裏向きで置ける。'}</p>`;
     } else if (!T.plays.length) {
       dock += `<p class="dock-hint">手札から 1〜${maxPlays} 枚を選んで基地に伏せる。または「リフレッシュ」。</p>`;
     } else if (T.plays.length < maxPlays) {
@@ -242,7 +242,7 @@
       }
     } else if (m.kind === 'refresh') {
       title = `${name(m.seat)} は<b>リフレッシュ</b>`;
-      body = '<p class="rp-note">カードを置かず、手札が 5 枚になるまで引いた。</p>';
+      body = '<p class="rp-note">伏せずに、手札が 5 枚になるまで引いた（手札 0 枚からなら、1 枚を裏向きで置ける）。</p>';
     } else if (m.kind === 'gone') {
       title = `${name(m.seat)} のカードは公開前に手札に戻された`;
     } else if (m.kind === 'score') {

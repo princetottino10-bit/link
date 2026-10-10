@@ -10,6 +10,9 @@
   const BASES_IN_PLAY = 4;
   const FACEDOWN_VALUE = 2;
   const MAX_PLAYS = 2;
+  // リフレッシュ：誰も公開する前にまとめて行う。手札 0 枚でリフレッシュした人は、引いたあと 1 枚を裏向きで出してよい
+  const REFRESH_PLAY = 2;
+  const REFRESH_EARLY = true;
 
   // ---------- 乱数（シード付き。ホストだけが使う） ----------
   function rng(seed) {
@@ -43,6 +46,8 @@
   // factionsBySeat: [[f,f],[f,f],[f,f],[f,f]]
   // opts.maxPlays: 1 ラウンドに伏せられる枚数（試験用。既定は MAX_PLAYS）。v0.2 相当は maxPlays: 1
   // opts.bpScale: 基地の耐久値の倍率（試験用。既定 1）
+  // opts.refreshPlay: リフレッシュで引いたあと 1 枚を裏向きで出してよいか（0 = 出せない、1 = いつでも、2 = 手札 0 枚でリフレッシュしたときだけ。既定 2）
+  // opts.refreshEarly: リフレッシュを誰も公開する前に行うか（既定 true）
   function setup(D, factionsBySeat, seed, opts) {
     const rand = rng(seed);
     let uid = 0;
@@ -63,7 +68,8 @@
       bases: [], baseDeck, baseTrash: [],
       seed: Math.floor(rand() * 2 ** 31), log: [], over: false,
       breaks: 0,
-      rules: { maxPlays: (opts && opts.maxPlays) || MAX_PLAYS, bpScale: (opts && opts.bpScale) || 1 },
+      rules: { maxPlays: (opts && opts.maxPlays) || MAX_PLAYS, bpScale: (opts && opts.bpScale) || 1, refreshPlay: opts && opts.refreshPlay != null ? opts.refreshPlay : REFRESH_PLAY,
+        refreshEarly: opts && opts.refreshEarly != null ? !!opts.refreshEarly : REFRESH_EARLY },
     };
     for (let i = 0; i < BASES_IN_PLAY; i++) state.bases.push(newBaseSlot(state, rand));
     players.forEach(p => draw(state, p.seat, HAND_REFRESH, rand));
@@ -315,7 +321,7 @@
       }
       case 'r4': case 'a2': drawLog(state, me, 1, rand); break;
       case 'w1': drawLog(state, me, 2, rand); break;
-      case 'w3': drawLog(state, me, 2, rand); discardOne(ctx, state, me); break;
+      case 'w3': drawLog(state, me, 3, rand); discardOne(ctx, state, me); break;
       case 'n3': {
         if (fortress(state, state, bi)) break;
         const opts = othersExposedHere(x => cardValue(D, state, bi, x) <= 2).map(x => x.uid);
@@ -622,16 +628,31 @@
       });
       actions[s] = { type: 'play', plays };
     });
-    // 2. スタートプレイヤーから順に公開
+    // 2. リフレッシュ（refreshEarly なら、誰も公開する前にまとめて行う）と、スタートプレイヤーから順に公開
+    const doRefresh = s => {
+      const p = state.players[s];
+      log(state, `P${s + 1} リフレッシュ`, { kind: 'refresh', seat: s });
+      const wasEmpty = p.hand.length === 0;
+      if (p.hand.length < HAND_REFRESH) drawLog(state, s, HAND_REFRESH - p.hand.length, rand);
+      const rp = state.rules ? state.rules.refreshPlay : 0;
+      if ((rp === 1 || (rp === 2 && wasEmpty)) && p.hand.length) {
+        const opts = [null];
+        p.hand.forEach(h => state.bases.forEach((_, j) => opts.push([h.uid, j])));
+        const t = choose(ctx, state, s, 'extraPlay', opts, {});
+        if (t) { playFromHandDown(D, state, s, t[0], t[1]); p.stats.fd++; }
+      }
+    };
+    const early = !!(state.rules && state.rules.refreshEarly);
+    if (early) {
+      for (let k = 0; k < n; k++) {
+        const s = (state.startPlayer + k) % n;
+        if (actions[s].type === 'refresh') doRefresh(s);
+      }
+    }
     for (let k = 0; k < n; k++) {
       const s = (state.startPlayer + k) % n;
       const a = actions[s];
-      const p = state.players[s];
-      if (a.type === 'refresh') {
-        log(state, `P${s + 1} リフレッシュ`, { kind: 'refresh', seat: s });
-        if (p.hand.length < HAND_REFRESH) drawLog(state, s, HAND_REFRESH - p.hand.length, rand);
-        continue;
-      }
+      if (a.type === 'refresh') { if (!early) doRefresh(s); continue; }
       a.plays.forEach(pl => revealOne(ctx, state, s, pl.uid));
     }
     // 3. 破壊チェック
