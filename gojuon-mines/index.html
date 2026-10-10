@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五十音マインスイーパ</title>
+  <meta name="description" content="五十音表にかくれた「言葉」の文字が地雷。数字をヒントに地雷の文字を見つけて言葉を当てる。3問のタイムを競うランクマッチも。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="五十音マインスイーパ">
+  <meta property="og:description" content="地雷は「言葉」の文字。推理して当てて、3問のタイムで競おう。">
+  <meta property="og:url" content="https://princetottino10-bit.github.io/link/gojuon-mines/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@suke69">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>五十音マインスイーパ</h1>
+      <p class="tagline">地雷は「言葉」の文字。推理して当てよう</p>
+    </header>
+
+    <div class="tabs">
+      <div role="tablist" class="tablist">
+        <button class="tab" id="tabPractice" role="tab">練習</button>
+        <button class="tab" id="tabRanked" role="tab">🔥ランクマッチ</button>
+      </div>
+      <button class="btn icon-btn" id="openStats" aria-label="成績">📊</button>
+      <button class="btn icon-btn" id="openRanking" aria-label="ランキング">🏆</button>
+    </div>
+
+    <div class="info">
+      <div class="stat"><div class="label">問題</div><div class="value" id="progress">-</div></div>
+      <div class="stat"><div class="label">文字数</div><div class="value" id="len">-</div></div>
+      <div class="stat"><div class="label">手数</div><div class="value" id="moves">-</div></div>
+      <div class="stat"><div class="label">タイム</div><div class="value" id="timer">-</div></div>
+      <div class="stat"><div class="label">ライフ</div><div class="value" id="lives">-</div></div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board" role="group" aria-label="五十音表の盤面"></div>
+      <div class="board-foot">
+        <span class="hint-text">右クリック / 長押し / Fキーで旗</span>
+        <button class="btn flagmode" id="flagMode" aria-pressed="false">🚩 旗モード</button>
+      </div>
+      <div class="board-cover" id="cover" hidden>
+        <div class="cover-card">
+          <div class="cover-title">🔥 ランクマッチ</div>
+          <p>7〜10文字の言葉を<b>3問</b>。<br>解き終えるまでの<b>タイム</b>で競います。<br>同じタイムなら手数が少ない方が上。</p>
+          <p class="cover-small">1問ごとにライフ3。0になったら失敗。<br>漢字ヒントは +30秒。</p>
+          <button class="btn primary big" id="startMatch">スタート</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="message" id="message" aria-live="polite"></div>
+
+    <div class="panel">
+      <div class="panel-title">見つけた文字（タップで入力）</div>
+      <div class="chips" id="chips"></div>
+      <div class="hint-kanji" id="hintText" hidden></div>
+      <div class="answer-row" id="answerRow">
+        <input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ひらがなで答える" aria-label="答え">
+        <button class="btn primary" id="submit">こたえる</button>
+      </div>
+      <div class="keys">
+        <button class="btn" id="kDaku" title="直前の文字に濁点・半濁点・小文字をつける">゛゜小</button>
+        <button class="btn" id="kBack" aria-label="1文字消す">⌫</button>
+        <button class="btn" id="kClear">クリア</button>
+        <button class="btn" id="hint">💡 漢字ヒント</button>
+      </div>
+      <div class="guesses" id="guesses" aria-label="これまでの答え"></div>
+      <div class="legend" id="legend" hidden><b style="background:#2f9e57"></b>場所も正解<b style="background:#c9971c"></b>地雷の文字<b style="background:rgba(255,255,255,.25)"></b>地雷じゃない</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="giveUp">あきらめる</button>
+      <button class="btn primary" id="next" hidden>つぎの問題</button>
+      <button class="btn primary" id="retry" hidden>もう一度挑戦</button>
+      <button class="btn" id="showResult" hidden>結果を見る</button>
+    </div>
+
+    <details class="rules" id="rules">
+      <summary>あそびかた</summary>
+      <ol>
+        <li>五十音表のどこかに、7〜10文字の言葉に使われている文字が<b>地雷</b>としてかくれています。言葉の中で同じ文字は2回使われません。</li>
+        <li>マスを開けると、まわり8マスにある地雷の数が出ます。0 のマスから周りが連鎖して開きます。</li>
+        <li>地雷だと思う文字には旗を立てましょう（右クリック・長押し・Fキー・旗モード）。</li>
+        <li>地雷を踏むとライフが1減りますが、その文字は確定します。<b>1手目だけはセーフ</b>。</li>
+        <li>濁点・半濁点・小さい文字は元の文字（が→か、ぱ→は、っ→つ）が地雷になります。</li>
+        <li>いつでも答えられます。まちがえるとライフが1減りますが、1文字ずつ<b>🟩場所も正解・🟨地雷の文字・⬜地雷じゃない</b>が分かります。</li>
+        <li><b>手数＝マスを開けた回数＋答えた回数</b>。</li>
+        <li><b>🔥ランクマッチ</b>は3問を解き終えるまでのタイムで🏆ランキングに挑戦。漢字ヒントは +30秒。</li>
+      </ol>
+    </details>
+
+    <footer>
+      made by <a href="https://princetottino10-bit.github.io/link/" target="_blank" rel="noopener noreferrer">りゅー</a><br>
+      辞書データ：<a href="https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project" target="_blank" rel="noopener noreferrer">JMdict</a>（EDRDG, CC BY-SA 4.0）
+    </footer>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalHead">
+    <div class="modal-card">
+      <div class="modal-head" id="modalHead"></div>
+      <div class="badge" id="modalBadge"></div>
+      <div class="modal-word" id="modalWord"></div>
+      <div class="modal-genre" id="modalGenre"></div>
+      <div class="modal-stats" id="modalStats"></div>
+      <div id="rankBox" hidden>
+        <form class="rank-form" id="rankForm">
+          <input id="rankName" maxlength="12" placeholder="なまえ（12文字まで）" aria-label="ランキングに載せる名前" autocomplete="nickname">
+          <button class="btn primary" id="rankSubmit" type="submit">ランキングに登録</button>
+        </form>
+        <div class="rank-note" id="rankNote" aria-live="polite"></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="shareX">Xでシェア</button>
+        <button class="btn" id="copy">コピー</button>
+        <button class="btn" id="closeModal">とじる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-label="成績とランキング">
+    <div class="modal-card wide">
+      <div class="modal-tabs" role="tablist">
+        <button class="tab" id="tabStats" role="tab" aria-controls="infoBody">📊 成績</button>
+        <button class="tab" id="tabRanking" role="tab" aria-controls="infoBody">🏆 ランキング</button>
+      </div>
+      <div id="infoBody" role="tabpanel"></div>
+      <div class="actions">
+        <button class="btn" id="closeInfo">とじる</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
