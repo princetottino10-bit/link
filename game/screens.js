@@ -141,7 +141,7 @@
     const seat = S.plan.order[S.plan.idx];
     const view = E.viewFor(S.game, seat);
     const me = view.players[seat];
-    const maxPlays = (S.game.rules || { maxPlays: E.MAX_PLAYS }).maxPlays;
+    const maxPlays = E.maxPlaysFor(D, S.game, seat);
     const preview = JSON.parse(JSON.stringify(view));
     T.plays.forEach(pl => {
       const hand = preview.players[seat].hand;
@@ -152,7 +152,7 @@
     const o = D.objectives[me.objective];
     const planned = T.plays.map((pl, k) => {
       const c = me.hand.find(x => x.uid === pl.uid);
-      return `<li>${'①②'[k]}「${esc(D.cards[c.cid].name)}」→ <b>${esc(D.bases[view.bases[pl.bi].id].name)}</b></li>`;
+      return `<li>${'①②③'[k]}「${esc(D.cards[c.cid].name)}」→ <b>${esc(D.bases[view.bases[pl.bi].id].name)}</b></li>`;
     }).join('');
     let dock = planned ? `<ol class="planned">${planned}</ol>` : '';
     if (sel) {
@@ -164,14 +164,14 @@
     } else if (!T.plays.length) {
       dock += `<p class="dock-hint">手札から 1〜${maxPlays} 枚を選んで基地に伏せる。または「リフレッシュ」。</p>`;
     } else if (T.plays.length < maxPlays) {
-      dock += '<p class="dock-hint">もう 1 枚置いてもいい（そのぶん手札が減る）。このままなら「決定」。置いたカードをもう一度タップすると取り消し。</p>';
+      dock += `<p class="dock-hint">あと ${maxPlays - T.plays.length} 枚まで置ける（そのぶん手札が減る）。このままなら「決定」。置いたカードをもう一度タップすると取り消し。</p>`;
     } else {
       dock += '<p class="dock-hint">これで決定する？ 置いたカードをもう一度タップすると取り消し。</p>';
     }
     const ready = T.planRefresh || T.plays.length > 0;
     const hand = me.hand.map(c => {
       const k = T.plays.findIndex(p => p.uid === c.uid);
-      return UI.handCard(D, c, c.uid === T.planSel, k >= 0 ? '①②'[k] : null);
+      return UI.handCard(D, c, c.uid === T.planSel, k >= 0 ? '①②③'[k] : null);
     }).join('');
     return `${UI.playersBar(view, S.names, { viewer: seat, phase: `${S.names[seat]}さん：配置` })}
       <main class="screen play-screen">

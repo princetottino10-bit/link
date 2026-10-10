@@ -139,6 +139,12 @@
     return k === 1 ? bp : Math.round(bp * k);
   }
 
+  // その席が 1 ラウンドに伏せられる枚数（ルールの枚数。表向きの知識の泉があれば +1）
+  function maxPlaysFor(D, state, seat) {
+    const base = state.rules ? state.rules.maxPlays : MAX_PLAYS;
+    return base + (state.bases.some((_, i) => activeStatic(D, state, i, seat, 'w4')) ? 1 : 0);
+  }
+
   // actions[seat] の伏せるカード一覧。{ uid, bi } 1 つの形と { plays: [...] } の形の両方を受け付ける
   function playsOf(a) {
     if (!a || a.type !== 'play') return [];
@@ -595,12 +601,11 @@
     const { D, rand } = ctx;
     const n = state.players.length;
     // 1. 全員同時に伏せて置く
-    const maxPlays = state.rules ? state.rules.maxPlays : MAX_PLAYS;
     actions.forEach((a, s) => {
       if (a.type !== 'play') return;
       const p = state.players[s];
       const seen = new Set();
-      const plays = playsOf(a).slice(0, maxPlays).filter(pl => {
+      const plays = playsOf(a).slice(0, maxPlaysFor(D, state, s)).filter(pl => {
         const ok = !seen.has(pl.uid) && p.hand.some(c => c.uid === pl.uid) && pl.bi >= 0 && pl.bi < state.bases.length;
         seen.add(pl.uid);
         return ok;
@@ -621,15 +626,8 @@
       const a = actions[s];
       const p = state.players[s];
       if (a.type === 'refresh') {
-        const target = state.bases.some((b, i) => activeStatic(D, state, i, s, 'w4')) ? 6 : HAND_REFRESH;
         log(state, `P${s + 1} リフレッシュ`, { kind: 'refresh', seat: s });
         if (p.hand.length < HAND_REFRESH) drawLog(state, s, HAND_REFRESH - p.hand.length, rand);
-        if (target > HAND_REFRESH && p.hand.length) {
-          const opts = [null];
-          p.hand.forEach(h => state.bases.forEach((_, j) => opts.push([h.uid, j])));
-          const t = choose(ctx, state, s, 'extraPlay', opts, {});
-          if (t) { playFromHandDown(D, state, s, t[0], t[1]); p.stats.fd++; }
-        }
         continue;
       }
       a.plays.forEach(pl => revealOne(ctx, state, s, pl.uid));
@@ -746,7 +744,7 @@
     ROUNDS, HAND_REFRESH, HAND_LIMIT, BASES_IN_PLAY,
     rng, shuffle, indexData, setup, playRound, viewFor,
     cardValue, totals, baseTotal, ranking, canFaceUp, faceUpBlock, findCard, exposed, onReveal, draw,
-    resolveRound, projectedVP, objectiveMet, baseBP, playsOf, MAX_PLAYS,
+    resolveRound, projectedVP, objectiveMet, baseBP, playsOf, maxPlaysFor, MAX_PLAYS,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Engine = api;

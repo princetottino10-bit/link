@@ -135,20 +135,22 @@
       const valueOf = value || (st => H(st, seat));
       const p = state.players[seat];
       const target = 5;
-      const w4 = state.bases.some((b) => b.stacks[seat].some(x => x.faceUp && x.cid === 'w4'));
-      const refreshValue = valueOf(clone(state)) + 0.35 * Math.max(0, target - p.hand.length) * 0.9 - 1.2 + (w4 ? 1.5 : 0);
+      const refreshValue = valueOf(clone(state)) + 0.35 * Math.max(0, target - p.hand.length) * 0.9 - 1.2;
       const first = bestPlay(state, seat, rand, chooser, valueOf);
       if (!first || !(first.v > refreshValue)) return { action: { type: 'refresh' }, up: false, ups: {} };
       const ups = { [first.uid]: first.up };
       let action = { type: 'play', uid: first.uid, bi: first.bi };
-      const maxPlays = state.rules ? state.rules.maxPlays : E.MAX_PLAYS;
-      if (maxPlays >= 2) {
-        const second = bestPlay(first.state, seat, rand, chooser, valueOf);
-        if (second && second.v > first.v + SECOND_PLAY_MARGIN) {
-          action = { type: 'play', plays: [{ uid: first.uid, bi: first.bi }, { uid: second.uid, bi: second.bi }] };
-          ups[second.uid] = second.up;
-        }
+      const maxPlays = E.maxPlaysFor(D, state, seat);
+      const plays = [{ uid: first.uid, bi: first.bi }];
+      let prev = first;
+      while (plays.length < maxPlays) {
+        const next = bestPlay(prev.state, seat, rand, chooser, valueOf);
+        if (!next || !(next.v > prev.v + SECOND_PLAY_MARGIN)) break;
+        plays.push({ uid: next.uid, bi: next.bi });
+        ups[next.uid] = next.up;
+        prev = next;
       }
+      if (plays.length > 1) action = { type: 'play', plays };
       return { action, up: first.up, ups };
     }
 

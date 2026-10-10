@@ -8,7 +8,9 @@ out.push('用語は [RULES.md](RULES.md) の「用語」を参照。「他人の
 out.push('## 派閥（8 種 × 6 枚）', '');
 for (const [fid, f] of Object.entries(d.factions)) {
   out.push(`### ${f.name} — ${f.verb}`, '');
-  out.push(`- **得意**：${f.good}`, `- **苦手**：${f.bad}`, `- **勝ち方**：${f.win}`, '');
+  out.push(`- **得意**：${f.good}`, `- **苦手**：${f.bad}`, `- **勝ち方**：${f.win}`);
+  if (f.trait) out.push(`- **派閥の特性**：${f.trait}`);
+  out.push('');
   out.push('| 値 | 名前 | 効果 |', '|---|---|---|');
   d.cards.filter(c => c.faction === fid).forEach(c => out.push(`| ${c.value} | ${c.name} | ${c.text} |`));
   const tags = d.bases.filter(b => b.tags.includes(fid)).map(b => b.name).join('・');

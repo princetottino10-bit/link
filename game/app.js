@@ -303,7 +303,7 @@
         const uid = num('uid');
         T.planRefresh = false;
         if (T.plays.some(p => p.uid === uid)) { T.plays = T.plays.filter(p => p.uid !== uid); T.planSel = null; break; }
-        if (T.plays.length >= (S.game.rules || { maxPlays: E.MAX_PLAYS }).maxPlays) break;
+        if (T.plays.length >= E.maxPlaysFor(App.D, S.game, S.plan.order[S.plan.idx])) break;
         T.planSel = T.planSel === uid ? null : uid;
         break;
       }
