@@ -38,11 +38,12 @@ let popCells = new Set();  // 次の描画で弾ませるマス
 let newGuess = false;      // 次の描画でめくる答えの行
 let timerHandle = null;
 
-const freshPuzzle = ([word, kanji]) => ({
-  word, kanji, open: [], flags: [], booms: [], guesses: [], opens: [],
+const GENRE_OF = new Map(LONG_WORDS.map(([w, , g]) => [w, g]));
+const freshPuzzle = ([word, kanji, genre]) => ({
+  word, kanji, genre: genre || GENRE_OF.get(word) || '', open: [], flags: [], booms: [], guesses: [], opens: [],
   lives: MAX_LIVES, moves: 0, done: false, won: false, hinted: false
 });
-const EMPTY = { ...freshPuzzle(['', '']), done: true };
+const EMPTY = { ...freshPuzzle(['', '', '']), done: true };
 
 const rememberWords = words => store.set(KEY.recent, [...(store.get(KEY.recent) || []), ...words].slice(-RECENT_MAX));
 const pickFresh = n => {
@@ -68,7 +69,7 @@ function enterPractice(fresh = false) {
   stopTimer();
   const saved = fresh ? null : store.get(KEY.practice);
   S = saved && saved.word && !saved.done
-    ? { ...freshPuzzle([saved.word, saved.kanji]), ...saved }
+    ? { ...freshPuzzle([saved.word, saved.kanji, saved.genre]), ...saved }
     : freshPuzzle(pickFresh(1)[0]);
   save();
   loadPuzzle('マスを開けて、地雷の文字をさがそう');
@@ -82,6 +83,7 @@ function enterRanked() {
   if (M && !M.done) {
     // 解いた直後に閉じた場合は、次の問題から
     if (M.puzzles[M.index].won && M.index < MATCH_SIZE - 1) M.index++;
+    M.puzzles = M.puzzles.map(p => ({ ...freshPuzzle([p.word, p.kanji, p.genre]), ...p }));
     S = M.puzzles[M.index];
     loadPuzzle(`${M.index + 1}問目の続きから（タイムは進んでいます）`);
     startTimer();
@@ -355,7 +357,8 @@ function render() {
   $('cover').hidden = !coverShown();
 
   $('progress').textContent = ranked ? (M ? `${M.index + 1}/${MATCH_SIZE}` : '-') : '練習';
-  $('len').textContent = S.word ? `${[...S.word].length}文字` : '-';
+  $('genre').textContent = S.genre || '-';
+  $('len').textContent = S.word ? `${[...S.word].length}文字` : '';
   $('moves').textContent = ranked ? (M ? `${totalMoves(M)}手` : '-') : `${S.moves}手`;
   $('lives').textContent = S.word ? hearts() : '-';
   $('timer').classList.toggle('running', !!timerHandle);
@@ -388,7 +391,7 @@ function shareText() {
     return `五十音マインスイーパ 🔥ランクマッチ\n${head}\n${lines.join('\n')}\n${URL_SELF}`;
   }
   const head = S.won
-    ? `練習：${[...S.word].length}文字を ${S.moves}手で正解${S.hinted ? ' 💡' : ''}`
+    ? `練習：${S.genre}・${[...S.word].length}文字を ${S.moves}手で正解${S.hinted ? ' 💡' : ''}`
     : '練習：💥 ざんねん…';
   return `五十音マインスイーパ\n${head}\n${guessLine(S)}\n${URL_SELF}`;
 }
@@ -406,7 +409,7 @@ function showResult() {
     $('modalHead').textContent = S.won ? '🎉 正解！' : '💥 ざんねん…';
     $('modalBadge').textContent = '';
     $('modalWord').textContent = S.word;
-    $('modalGenre').textContent = S.kanji;
+    $('modalGenre').textContent = `${S.kanji}（${S.genre}）`;
     $('modalStats').innerHTML = `手数 <b>${S.moves}</b>（開けた ${S.opens.length}・答えた ${S.guesses.length}）`;
   }
   renderRankBox();

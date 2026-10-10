@@ -13,7 +13,7 @@
   <meta name="twitter:site" content="@suke69">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -34,10 +34,15 @@
 
     <div class="info">
       <div class="stat"><div class="label">問題</div><div class="value" id="progress">-</div></div>
-      <div class="stat"><div class="label">文字数</div><div class="value" id="len">-</div></div>
       <div class="stat"><div class="label">手数</div><div class="value" id="moves">-</div></div>
       <div class="stat"><div class="label">タイム</div><div class="value" id="timer">-</div></div>
       <div class="stat"><div class="label">ライフ</div><div class="value" id="lives">-</div></div>
+    </div>
+
+    <div class="topic" aria-live="polite">
+      <span class="topic-label">ジャンル</span>
+      <b class="topic-genre" id="genre">-</b>
+      <span class="topic-len" id="len"></span>
     </div>
 
     <div class="board-wrap">
@@ -86,7 +91,7 @@
     <details class="rules" id="rules">
       <summary>あそびかた</summary>
       <ol>
-        <li>五十音表のどこかに、7〜10文字の言葉に使われている文字が<b>地雷</b>としてかくれています。言葉の中で同じ文字は2回使われません。</li>
+        <li>五十音表のどこかに、7〜10文字の言葉に使われている文字が<b>地雷</b>としてかくれています。言葉の中で同じ文字は2回使われません。<b>ジャンル</b>が手がかりです。</li>
         <li>マスを開けると、まわり8マスにある地雷の数が出ます。0 のマスから周りが連鎖して開きます。</li>
         <li>地雷だと思う文字には旗を立てましょう（右クリック・長押し・Fキー・旗モード）。</li>
         <li>地雷を踏むとライフが1減りますが、その文字は確定します。<b>1手目だけはセーフ</b>。</li>
