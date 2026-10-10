@@ -8,12 +8,13 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="五十音マインスイーパ">
   <meta property="og:description" content="地雷は「お題の言葉」の文字。数字ヒントで推理して、かくれた言葉を当てよう。">
-  <meta property="og:url" content="https://princetottino10-bit.github.io/gojuon-mines/">
+  <meta property="og:url" content="https://princetottino10-bit.github.io/link/gojuon-mines/">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@suke69">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;600;700;900&display=swap');
-
     :root {
       --bg1: #0a1628;
       --bg2: #1a3f8f;
@@ -374,9 +375,9 @@
     </div>
 
     <div class="board-wrap">
-      <div class="board" id="board" aria-label="五十音表の盤面"></div>
+      <div class="board" id="board" role="group" aria-label="五十音表の盤面"></div>
       <div class="board-foot">
-        <span class="hint-text">右クリック / 長押しで旗</span>
+        <span class="hint-text">右クリック / 長押し / Fキーで旗</span>
         <button class="btn flagmode" id="flagMode" aria-pressed="false">🚩 旗モード</button>
       </div>
     </div>
@@ -387,7 +388,7 @@
       <div class="panel-title">見つけた文字（タップで入力）</div>
       <div class="chips" id="chips"></div>
       <div class="answer-row" id="answerRow">
-        <input id="answer" type="text" inputmode="kana" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ひらがなで答える" aria-label="答え">
+        <input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ひらがなで答える" aria-label="答え">
         <button class="btn primary" id="submit">こたえる</button>
       </div>
       <div class="keys">
@@ -408,7 +409,7 @@
       <ol>
         <li>五十音表のどこかに、お題の言葉に使われている文字が<b>地雷</b>としてかくれています。</li>
         <li>マスを開けると、まわり8マスにある地雷の数が出ます。</li>
-        <li>地雷だと思う文字には旗を立てましょう（右クリック・長押し・旗モード）。</li>
+        <li>地雷だと思う文字には旗を立てましょう（右クリック・長押し・Fキー・旗モード）。</li>
         <li>地雷を踏むとライフが1減りますが、その文字は確定します。<b>1手目だけはセーフ</b>。</li>
         <li>濁点・半濁点・小さい文字は元の文字（が→か、ぱ→は、っ→つ）が地雷になります。同じ文字は1つだけ。</li>
         <li>いつでも答えられます。まちがえるとライフが1減ります。ライフ0で終了。</li>
@@ -439,7 +440,10 @@
 
   <script>
   (() => {
-    const URL_SELF = 'https://princetottino10-bit.github.io/gojuon-mines/';
+    // 置き場所が変わっても壊れないよう、シェア URL は今開いているページから作る
+    const URL_SELF = /^https?:$/.test(location.protocol)
+      ? location.origin + location.pathname.replace(/index\.html$/, '')
+      : 'https://princetottino10-bit.github.io/link/gojuon-mines/';
     const MAX_LIVES = 3;
 
     // 左から ん わ ら や ま は な た さ か あ（縦書きの五十音表と同じ並び）。「・」は空きマス
@@ -448,15 +452,15 @@
     const COLS = TABLE.length, ROWS = 5;
 
     const WORDS = {
-      'たべもの': 'りんご みかん いちご ぶどう すいか さくらんぼ おにぎり てんぷら うどん やきとり からあげ たこやき おこのみやき ぎょうざ とうふ なっとう みそしる たまご ちくわ せんべい だいふく ようかん まんじゅう おもち かぼちゃ にんじん だいこん たまねぎ きゅうり じゃがいも とうもろこし ほうれんそう しいたけ えだまめ めろん れもん さつまいも くるみ ぎゅうにゅう おむらいす すきやき しゃぶしゃぶ おでん うなぎ まぐろ あんぱん おせんべい',
-      'いきもの': 'うさぎ きりん らいおん ぱんだ こあら ごりら きつね たぬき ひつじ にわとり ぺんぎん かえる いるか くじら しまうま ひよこ からす つばめ ふくろう もぐら かたつむり てんとうむし かぶとむし くわがた とんぼ ちょう ほたる だんごむし いのしし おおかみ きつつき あざらし らっこ ふらみんご だちょう かもめ はくちょう めだか きんぎょ くらげ',
+      'たべもの': 'りんご みかん いちご ぶどう すいか さくらんぼ おにぎり てんぷら うどん やきとり からあげ たこやき おこのみやき ぎょうざ なっとう みそしる たまご ちくわ せんべい だいふく ようかん まんじゅう おもち かぼちゃ にんじん だいこん たまねぎ きゅうり じゃがいも とうもろこし ほうれんそう しいたけ えだまめ めろん れもん さつまいも くるみ ぎゅうにゅう おむらいす すきやき しゃぶしゃぶ おでん うなぎ まぐろ あんぱん',
+      'いきもの': 'うさぎ きりん らいおん ぱんだ こあら ごりら きつね たぬき ひつじ にわとり ぺんぎん かえる いるか くじら しまうま ひよこ からす つばめ ふくろう もぐら かたつむり てんとうむし かぶとむし くわがた とんぼ ほたる だんごむし いのしし おおかみ あざらし らっこ ふらみんご だちょう かもめ はくちょう めだか きんぎょ くらげ',
       'しぜん': 'さくら かみなり たいよう みずうみ ゆうやけ あさひ くもり たいふう すなはま いなずま ゆうだち こおり おんせん かざん さばく みさき もみじ いちょう どんぐり つくし ひまわり あさがお たんぽぽ ちゅうりっぷ こすもす すみれ あじさい まつぼっくり',
       'のりもの': 'でんしゃ ひこうき じてんしゃ くるま しんかんせん ろけっと しょうぼうしゃ きゅうきゅうしゃ ちかてつ ゆうらんせん ききゅう せんすいかん いかだ とらっく',
       'がっこう': 'えんぴつ けしごむ じょうぎ ふでばこ こくばん らんどせる つくえ きょうしつ たいいくかん としょかん うんどうかい しゅくだい きゅうしょく せんせい じかんわり そつぎょう にゅうがく',
-      'いえ・どうぐ': 'ほうき はさみ とけい かがみ めがね まくら ふとん れいぞうこ せんたくき そうじき でんわ てがみ ほうちょう やかん はぶらし せっけん',
-      'あそび': 'やきゅう すもう じゅうどう けんどう すいえい からて たっきゅう まらそん かるた けんだま おにごっこ かくれんぼ なわとび しりとり すごろく おりがみ つみき ぶらんこ すべりだい たこあげ しょうぎ',
+      'いえ・どうぐ': 'ほうき はさみ とけい めがね まくら ふとん れいぞうこ せんたくき そうじき でんわ てがみ ほうちょう やかん はぶらし せっけん',
+      'あそび': 'やきゅう すもう じゅうどう けんどう すいえい からて たっきゅう まらそん かるた けんだま おにごっこ かくれんぼ なわとび しりとり すごろく おりがみ つみき ぶらんこ すべりだい たこあげ',
       'ぎょうじ': 'おしょうがつ ひなまつり こどものひ たなばた おつきみ くりすます おおみそか せつぶん はなみ なつやすみ ふゆやすみ おぼん まつり ゆかた こたつ かきごおり ふうりん かどまつ おとしだま かがみもち もちつき はなび ぼんおどり',
-      'からだ': 'あたま くちびる おなか せなか まゆげ ほっぺ しんぞう かかと くるぶし てのひら おへそ'
+      'からだ': 'あたま くちびる おなか せなか まゆげ ほっぺ しんぞう くるぶし てのひら おへそ'
     };
 
     // ---------- kana utils ----------
@@ -482,11 +486,17 @@
 
     // ---------- word pool ----------
     const KANA_SET = new Set(TABLE.join('').replace(/・/g, ''));
+    // 地雷の文字と文字数がまったく同じ単語は盤面で見分けられないので、先に出たほうだけ残す
     const POOL = [];
+    const boardKeys = new Set();
     for (const [genre, list] of Object.entries(WORDS)) {
       for (const w of list.split(/\s+/)) {
         const m = mineLetters(w);
-        if (m.length >= 3 && m.length <= 8 && m.every(k => KANA_SET.has(k))) POOL.push({ w, genre });
+        if (m.length < 3 || m.length > 8 || !m.every(k => KANA_SET.has(k))) continue;
+        const key = [...m].sort().join('') + '/' + [...w].length;
+        if (boardKeys.has(key)) continue;
+        boardKeys.add(key);
+        POOL.push({ w, genre });
       }
     }
 
@@ -538,26 +548,41 @@
       return out;
     };
 
-    function newGame(m) {
+    const dailyPick = day => DAILY_ORDER[((day - DAY0) % DAILY_ORDER.length + DAILY_ORDER.length) % DAILY_ORDER.length];
+    const freshState = (pick, day) => ({
+      word: pick.w, genre: pick.genre, day,
+      open: [], flags: [], booms: [], lives: MAX_LIVES, moves: 0, misses: 0, done: false, won: false
+    });
+    const storeKey = () => mode === 'daily' ? `gojuon-mines:${S.day}` : 'gojuon-mines:free';
+    let gameId = 0;
+
+    // fresh: フリープレイで保存中のゲームを捨てて新しいお題にする
+    function newGame(m, fresh = false) {
       mode = m;
-      let pick, day = jstDay();
+      gameId++;
+      closeModal();
+      const day = jstDay();
       if (m === 'daily') {
-        pick = DAILY_ORDER[((day - DAY0) % DAILY_ORDER.length + DAILY_ORDER.length) % DAILY_ORDER.length];
+        // 保存があればそれを優先する（単語リストを変えても、その日の途中経過は消えない）
+        const saved = store.get(`gojuon-mines:${day}`);
+        S = saved && saved.word ? saved : freshState(dailyPick(day), day);
       } else {
-        let tries = 0;
-        do { pick = POOL[Math.floor(Math.random() * POOL.length)]; } while (S && pick.w === S.word && ++tries < 5);
+        const saved = fresh ? null : store.get('gojuon-mines:free');
+        if (saved && saved.word && !saved.done) {
+          S = saved;
+        } else {
+          // 今日のお題と直前のお題は避ける
+          const avoid = new Set([dailyPick(day).w, S && S.word]);
+          const choices = POOL.filter(p => !avoid.has(p.w));
+          S = freshState(choices[Math.floor(Math.random() * choices.length)], day);
+        }
       }
-      const saved = m === 'daily' ? store.get(`gojuon-mines:${day}`) : null;
-      S = saved && saved.word === pick.w ? saved : {
-        word: pick.w, genre: pick.genre, day,
-        open: [], flags: [], booms: [], lives: MAX_LIVES, moves: 0, done: false, won: false, revealed: false
-      };
-      S.day = day;
       buildCells();
       $('answer').value = '';
-      setMessage(S.done ? '' : 'マスを開けて、地雷の文字をさがそう');
+      if (!S.done) setMessage('マスを開けて、地雷の文字をさがそう');
+      else setMessage(mode === 'daily' ? '今日のお題はおわり。「結果を見る」からシェアできます' : '');
+      save();
       render();
-      if (S.done) showResult();
     }
 
     function buildCells() {
@@ -573,7 +598,7 @@
     }
 
     function save() {
-      if (mode === 'daily') store.set(`gojuon-mines:${S.day}`, S);
+      store.set(storeKey(), S);
     }
 
     // ---------- actions ----------
@@ -622,8 +647,19 @@
       if (S.done) return;
       const v = toHira($('answer').value).replace(/[\s　]/g, '');
       if (!v) return;
+      // 文字数違い・ひらがな以外は打ちまちがいとみなし、ライフは減らさない
+      const len = [...S.word].length;
+      if (!/^[ぁ-ゖ]+$/.test(v)) {
+        bump($('answerRow'));
+        return setMessage('ひらがなで答えてね（ライフは減りません）');
+      }
+      if ([...v].length !== len) {
+        bump($('answerRow'));
+        return setMessage(`答えは${len}文字です（ライフは減りません）`);
+      }
       if (v === S.word) return finish(true);
       S.lives--;
+      S.misses = (S.misses || 0) + 1;
       bump($('answerRow'));
       setMessage(`「${v}」じゃないみたい… ライフ -1`);
       if (S.lives <= 0) return finish(false);
@@ -637,7 +673,8 @@
       save();
       render();
       setMessage(won ? '正解！' : `ざんねん… 正解は「${S.word}」`);
-      setTimeout(showResult, won ? 300 : 700);
+      const id = gameId;
+      setTimeout(() => { if (id === gameId) showResult(); }, won ? 300 : 700);
     }
 
     // ---------- render ----------
@@ -731,7 +768,8 @@
     // ---------- result / share ----------
     function shareText() {
       const title = mode === 'daily' ? `#${S.day - DAY0 + 1}（${dayLabel(S.day)}のお題）` : 'フリープレイ';
-      const body = S.won ? `${hearts()} ${S.moves}手` : '💥 ざんねん…';
+      const miss = S.misses ? ` 誤答${S.misses}` : '';
+      const body = S.won ? `${hearts()} ${S.moves}手${miss}` : '💥 ざんねん…';
       return `五十音マインスイーパ ${title}\n${body}\n${URL_SELF}`;
     }
 
@@ -739,10 +777,19 @@
       $('modalHead').textContent = S.won ? '🎉 正解！' : '💥 ゲームオーバー';
       $('modalWord').textContent = S.word;
       $('modalGenre').textContent = `ジャンル：${S.genre}`;
-      $('modalStats').innerHTML = `ライフ ${hearts()}<br>手数 ${S.moves}`
+      $('modalStats').innerHTML = `ライフ ${hearts()}<br>手数 ${S.moves}　誤答 ${S.misses || 0}`
         + (mode === 'daily' ? '<br><small style="color:var(--muted)">次のお題は明日0時（日本時間）</small>' : '');
+      if (!$('modal').classList.contains('show')) lastFocus = document.activeElement;
       $('modal').classList.add('show');
       $('closeModal').focus();
+    }
+
+    let lastFocus = null;
+    function closeModal() {
+      if (!$('modal').classList.contains('show')) return;
+      $('modal').classList.remove('show');
+      if (lastFocus && document.contains(lastFocus) && !lastFocus.disabled) lastFocus.focus();
+      lastFocus = null;
     }
 
     let toastTimer;
@@ -784,6 +831,13 @@
       if (!longPressed) toggleFlag(+el.dataset.i);
     });
 
+    boardEl.addEventListener('keydown', e => {
+      const el = e.target.closest('.cell');
+      if (!el || e.key.toLowerCase() !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault();
+      toggleFlag(+el.dataset.i);
+    });
+
     $('flagMode').addEventListener('click', () => { flagMode = !flagMode; render(); });
     $('submit').addEventListener('click', submitAnswer);
     $('answer').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) submitAnswer(); });
@@ -801,14 +855,33 @@
     $('giveUp').addEventListener('click', () => {
       if (!S.done && confirm('あきらめて答えを見ますか？')) { S.lives = 0; finish(false); }
     });
-    $('next').addEventListener('click', () => newGame('free'));
+    $('next').addEventListener('click', () => newGame('free', true));
     $('showResult').addEventListener('click', showResult);
     $('tabDaily').addEventListener('click', () => mode !== 'daily' && newGame('daily'));
     $('tabFree').addEventListener('click', () => mode !== 'free' && newGame('free'));
 
-    $('closeModal').addEventListener('click', () => $('modal').classList.remove('show'));
-    $('modal').addEventListener('click', e => { if (e.target === $('modal')) $('modal').classList.remove('show'); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') $('modal').classList.remove('show'); });
+    $('closeModal').addEventListener('click', closeModal);
+    $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+    document.addEventListener('keydown', e => {
+      if (!$('modal').classList.contains('show')) return;
+      if (e.key === 'Escape') return closeModal();
+      if (e.key !== 'Tab') return;
+      // モーダルの中だけでフォーカスを回す
+      const items = [...$('modal').querySelectorAll('button')];
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    // 開きっぱなしで日付をまたいだら、手をつけていないか終わっているときだけ新しいお題に切り替える
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || mode !== 'daily' || jstDay() === S.day) return;
+      if (S.done || (!S.moves && !S.misses)) {
+        newGame('daily');
+        toast('日付が変わったので新しいお題です');
+      } else {
+        setMessage('日付が変わりました。このお題を終えたら再読み込みで新しいお題に');
+      }
+    });
     $('shareX').addEventListener('click', () => {
       window.open('https://x.com/intent/post?text=' + encodeURIComponent(shareText()), '_blank', 'noopener');
     });
@@ -816,6 +889,15 @@
       try { await navigator.clipboard.writeText(shareText()); toast('コピーしました'); }
       catch { toast('コピーできませんでした'); }
     });
+
+    // 30日より前の今日のお題の記録は消す
+    try {
+      const old = jstDay() - 30;
+      for (let n = localStorage.length - 1; n >= 0; n--) {
+        const m = /^gojuon-mines:(\d+)$/.exec(localStorage.key(n));
+        if (m && +m[1] < old) localStorage.removeItem(m[0]);
+      }
+    } catch {}
 
     buildBoard();
     if (!store.get('gojuon-mines:seen-rules')) {
