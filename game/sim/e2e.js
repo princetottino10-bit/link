@@ -95,8 +95,8 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
           await shot('05b-plan-full', true);
         }
         // 盤面のカードの拡大表示を一度開く（表にできない理由もここに出る）
-        if (!shots.has('06-card-detail') && await count('.board .mini.is-down.is-known')) {
-          await click('.board .mini.is-down.is-known');
+        if (!shots.has('06-card-detail') && await count('.board .mini.is-down.is-known:not(.is-covered)')) {
+          await click('.board .mini.is-down.is-known:not(.is-covered)');
           await page.waitForTimeout(350);
           await shot('06-card-detail');
           await click('.sheet-close');
