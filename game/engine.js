@@ -9,6 +9,7 @@
   const HAND_LIMIT = 6;
   const BASES_IN_PLAY = 4;
   const FACEDOWN_VALUE = 2;
+  const MAX_PLAYS = 2;
 
   // ---------- 乱数（シード付き。ホストだけが使う） ----------
   function rng(seed) {
@@ -40,7 +41,9 @@
 
   // ---------- 準備 ----------
   // factionsBySeat: [[f,f],[f,f],[f,f],[f,f]]
-  function setup(D, factionsBySeat, seed) {
+  // opts.maxPlays: 1 ラウンドに伏せられる枚数（試験用。既定は MAX_PLAYS）。v0.2 相当は maxPlays: 1
+  // opts.bpScale: 基地の耐久値の倍率（試験用。既定 1）
+  function setup(D, factionsBySeat, seed, opts) {
     const rand = rng(seed);
     let uid = 0;
     const players = factionsBySeat.map((fs, i) => {
@@ -60,6 +63,7 @@
       bases: [], baseDeck, baseTrash: [],
       seed: Math.floor(rand() * 2 ** 31), log: [], over: false,
       breaks: 0,
+      rules: { maxPlays: (opts && opts.maxPlays) || MAX_PLAYS, bpScale: (opts && opts.bpScale) || 1 },
     };
     for (let i = 0; i < BASES_IN_PLAY; i++) state.bases.push(newBaseSlot(state, rand));
     players.forEach(p => draw(state, p.seat, HAND_REFRESH, rand));
@@ -126,6 +130,19 @@
       }
     }
     return Math.max(0, v);
+  }
+
+  // 基地の耐久値（試験用の倍率を反映）
+  function baseBP(D, state, bi) {
+    const bp = D.bases[state.bases[bi].id].bp;
+    const k = state.rules ? state.rules.bpScale : 1;
+    return k === 1 ? bp : Math.round(bp * k);
+  }
+
+  // actions[seat] の伏せるカード一覧。{ uid, bi } 1 つの形と { plays: [...] } の形の両方を受け付ける
+  function playsOf(a) {
+    if (!a || a.type !== 'play') return [];
+    return a.plays ? a.plays : [{ uid: a.uid, bi: a.bi }];
   }
 
   function totals(D, state, bi) {
@@ -208,6 +225,7 @@
     log(state, `P${c.owner + 1} の${nameOf(D, c)}が手札に戻った @${baseName(D, state, f.bi)}`, { kind: 'bounce', uid: c.uid, bi: f.bi });
     state.bases[f.bi].stacks[f.s].splice(f.i, 1);
     c.faceUp = false;
+    delete c.pending;
     state.players[c.owner].hand.push(c);
   }
 
@@ -457,7 +475,10 @@
         drawLog(state, me, 1, rand);
         const others = state.players.filter(q => q.seat !== me);
         const top = Math.max(...others.map(q => q.vp));
-        others.filter(q => q.vp === top).forEach(q => discardOne(ctx, state, q.seat));
+        others.filter(q => q.vp === top).forEach(q => {
+          const x = exposed(state, bi, q.seat);
+          if (x && x.faceUp && !immune(D, state, x, me)) flipDown(D, state, x);
+        });
         break;
       }
       case 't3': {
@@ -547,6 +568,26 @@
     }
   }
 
+  // 伏せたカード 1 枚を公開する（表/裏は持ち主に聞く）
+  function revealOne(ctx, state, s, uid) {
+    const { D } = ctx;
+    const p = state.players[s];
+    const f = findCard(state, uid);
+    if (!f || !f.card.pending) { log(state, `P${s + 1} のカードは公開前に戻された`, { kind: 'gone', seat: s }); return; }
+    delete f.card.pending;
+    if (f.card.faceUp) return; // 効果ですでに表になっている
+    let up = false;
+    if (canFaceUp(D, state, f.bi, f.card)) up = choose(ctx, state, s, 'faceUp', [true, false], { bi: f.bi, uid });
+    if (up) {
+      f.card.faceUp = true; p.stats.fu++;
+      log(state, `P${s + 1} ${D.cards[f.card.cid].name} を表で公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid, bi: f.bi, up: true });
+      onReveal(ctx, state, f.card);
+    } else {
+      p.stats.fd++;
+      log(state, `P${s + 1} 裏向きで公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid, bi: f.bi, up: false });
+    }
+  }
+
   // ---------- ラウンド進行 ----------
   // actions[seat] = { type:'play', uid, bi } | { type:'refresh' }
   // reveal時の表/裏は chooser(kind='faceUp') に聞く。
@@ -554,14 +595,25 @@
     const { D, rand } = ctx;
     const n = state.players.length;
     // 1. 全員同時に伏せて置く
+    const maxPlays = state.rules ? state.rules.maxPlays : MAX_PLAYS;
     actions.forEach((a, s) => {
       if (a.type !== 'play') return;
       const p = state.players[s];
-      const i = p.hand.findIndex(c => c.uid === a.uid);
-      if (i < 0) { actions[s] = { type: 'refresh' }; return; }
-      const c = p.hand.splice(i, 1)[0];
-      c.faceUp = false;
-      state.bases[a.bi].stacks[s].push(c);
+      const seen = new Set();
+      const plays = playsOf(a).slice(0, maxPlays).filter(pl => {
+        const ok = !seen.has(pl.uid) && p.hand.some(c => c.uid === pl.uid) && pl.bi >= 0 && pl.bi < state.bases.length;
+        seen.add(pl.uid);
+        return ok;
+      });
+      if (!plays.length) { actions[s] = { type: 'refresh' }; return; }
+      plays.forEach(pl => {
+        const i = p.hand.findIndex(c => c.uid === pl.uid);
+        const c = p.hand.splice(i, 1)[0];
+        c.faceUp = false;
+        c.pending = true; // このラウンドに公開を待っている印（手札に戻されたら消える）
+        state.bases[pl.bi].stacks[s].push(c);
+      });
+      actions[s] = { type: 'play', plays };
     });
     // 2. スタートプレイヤーから順に公開
     for (let k = 0; k < n; k++) {
@@ -580,24 +632,12 @@
         }
         continue;
       }
-      const f = findCard(state, a.uid);
-      if (!f) { log(state, `P${s + 1} のカードは公開前に戻された`, { kind: 'gone', seat: s }); continue; }
-      let up = false;
-      if (canFaceUp(D, state, f.bi, f.card)) up = choose(ctx, state, s, 'faceUp', [true, false], { bi: f.bi, uid: a.uid });
-      if (up) {
-        f.card.faceUp = true; p.stats.fu++;
-        log(state, `P${s + 1} ${D.cards[f.card.cid].name} を表で公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid: f.card.uid, bi: f.bi, up: true });
-        onReveal(ctx, state, f.card);
-      } else {
-        p.stats.fd++;
-        log(state, `P${s + 1} 裏向きで公開 @${D.bases[state.bases[f.bi].id].name}`, { kind: 'reveal', seat: s, uid: f.card.uid, bi: f.bi, up: false });
-      }
+      a.plays.forEach(pl => revealOne(ctx, state, s, pl.uid));
     }
     // 3. 破壊チェック
     const final = state.round >= ROUNDS;
     for (let bi = 0; bi < state.bases.length; bi++) {
-      const bdef = D.bases[state.bases[bi].id];
-      if (baseTotal(D, state, bi) >= bdef.bp) scoreBase(ctx, state, bi, false);
+      if (baseTotal(D, state, bi) >= baseBP(D, state, bi)) scoreBase(ctx, state, bi, false);
     }
     // 4. 手札上限
     state.players.forEach(p => { while (p.hand.length > HAND_LIMIT) discardOne(ctx, state, p.seat); });
@@ -667,9 +707,9 @@
     const st = p.stats;
     switch (p.objective) {
       case 'o1': return st.first >= 4;
-      case 'o2': return st.fd >= 5;
-      case 'o3': return st.fu >= 4;
-      case 'o4': return st.ranked >= 7;
+      case 'o2': return st.fd >= 8;
+      case 'o3': return st.fu >= 6;
+      case 'o4': return st.ranked >= 8;
       case 'o5': return st.bigScore >= 7;
       case 'o6': return st.second >= 3;
       case 'o7': return p.hand.length >= 5;
@@ -706,7 +746,7 @@
     ROUNDS, HAND_REFRESH, HAND_LIMIT, BASES_IN_PLAY,
     rng, shuffle, indexData, setup, playRound, viewFor,
     cardValue, totals, baseTotal, ranking, canFaceUp, faceUpBlock, findCard, exposed, onReveal, draw,
-    resolveRound, projectedVP, objectiveMet,
+    resolveRound, projectedVP, objectiveMet, baseBP, playsOf, MAX_PLAYS,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Engine = api;

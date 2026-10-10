@@ -21,7 +21,7 @@ function planRound(state, seed) {
   const rand = E.rng(seed);
   const chooser = makeGreedyChooser(rand);
   const decided = state.players.map((_, s) => greedyAction(state, s, rand, chooser));
-  const auto = (st, seat, kind, options, info) => kind === 'faceUp' ? decided[seat].up : chooser(st, seat, kind, options, info);
+  const auto = (st, seat, kind, options, info) => kind === 'faceUp' ? (info && info.uid in decided[seat].ups ? decided[seat].ups[info.uid] : decided[seat].up) : chooser(st, seat, kind, options, info);
   return { actions: decided.map(d => d.action), auto };
 }
 

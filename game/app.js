@@ -19,7 +19,7 @@
   window.App = App;
 
   function freshTransient() {
-    return { tut: null, tutStart: false, modal: null, logOpen: false, planSel: null, planBase: null, planRefresh: false, pick: null, pickCard: null, draftFocus: null, form: null, error: null };
+    return { tut: null, tutStart: false, modal: null, logOpen: false, planSel: null, plays: [], planRefresh: false, pick: null, pickCard: null, draftFocus: null, form: null, error: null };
   }
 
   // ---------- 保存 ----------
@@ -137,8 +137,8 @@
     const actions = [], botUp = [];
     g.players.forEach((_, s) => {
       if (!S.bots[s]) { actions[s] = null; botUp[s] = false; return; }
-      const d = App.B.greedyAction(g, s, rand, chooser);
-      actions[s] = d.action; botUp[s] = d.up;
+      const d = App.B.readerAction(g, s, rand, chooser);
+      actions[s] = d.action; botUp[s] = d.ups;
     });
     const order = [];
     for (let k = 0; k < 4; k++) { const s = (g.startPlayer + k) % 4; if (!S.bots[s]) order.push(s); }
@@ -150,14 +150,14 @@
   }
 
   function resetPlanSelection() {
-    Object.assign(App.T, { planSel: null, planBase: null, planRefresh: false });
+    Object.assign(App.T, { planSel: null, plays: [], planRefresh: false });
   }
 
   function planConfirm() {
     const S = App.S, T = App.T, plan = S.plan;
     const seat = plan.order[plan.idx];
     if (T.planRefresh) plan.actions[seat] = { type: 'refresh' };
-    else if (T.planSel != null && T.planBase != null) plan.actions[seat] = { type: 'play', uid: T.planSel, bi: T.planBase };
+    else if (T.plays.length) plan.actions[seat] = { type: 'play', plays: T.plays.slice() };
     else return;
     plan.idx++;
     resetPlanSelection();
@@ -183,7 +183,8 @@
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     return (st, seat, kind, options, info) => {
       if (!S.bots[seat]) return undefined;
-      const a = kind === 'faceUp' ? res.botUp[seat] : chooser(st, seat, kind, options, info);
+      const up = res.botUp[seat];
+      const a = kind === 'faceUp' ? (up && typeof up === 'object' ? !!up[info.uid] : up) : chooser(st, seat, kind, options, info);
       return options.some(o => same(o, a)) ? a : options[0];
     };
   }
@@ -301,12 +302,13 @@
       case 'hand': {
         const uid = num('uid');
         T.planRefresh = false;
+        if (T.plays.some(p => p.uid === uid)) { T.plays = T.plays.filter(p => p.uid !== uid); T.planSel = null; break; }
+        if (T.plays.length >= (S.game.rules || { maxPlays: E.MAX_PLAYS }).maxPlays) break;
         T.planSel = T.planSel === uid ? null : uid;
-        if (T.planSel == null) T.planBase = null;
         break;
       }
-      case 'place': T.planBase = num('bi'); break;
-      case 'refresh': T.planRefresh = !T.planRefresh; T.planSel = null; T.planBase = null; break;
+      case 'place': if (T.planSel != null) { T.plays = T.plays.concat([{ uid: T.planSel, bi: num('bi') }]); T.planSel = null; } break;
+      case 'refresh': T.planRefresh = !T.planRefresh; T.planSel = null; T.plays = []; break;
       case 'plan-ok': planConfirm(); return;
       case 'opt': T.pick = num('i'); break;
       case 'opt-card': T.pickCard = num('uid'); T.pick = null; break;

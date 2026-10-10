@@ -58,9 +58,10 @@
   }
 
   // 手札のカード（効果文つきの少し大きい札）
-  function handCard(D, c, selected) {
+  function handCard(D, c, selected, mark) {
     const def = D.cards[c.cid];
-    return `<button type="button" class="hcard f-${def.faction}${selected ? ' is-selected' : ''}" data-act="hand" data-uid="${c.uid}">` +
+    return `<button type="button" class="hcard f-${def.faction}${selected ? ' is-selected' : ''}${mark ? ' is-planned' : ''}" data-act="hand" data-uid="${c.uid}">` +
+      (mark ? `<span class="plan-mark">${mark}</span>` : '') +
       `<span class="hc-top"><span class="glyph">${FACTION_GLYPH[def.faction]}</span><span class="val">${def.value}</span></span>` +
       `<span class="nm">${esc(def.name)}</span></button>`;
   }

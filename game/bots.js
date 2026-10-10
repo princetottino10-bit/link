@@ -5,6 +5,7 @@
 
   function createBots(E, D) {
     const clone = s => JSON.parse(JSON.stringify(s));
+    const SECOND_PLAY_MARGIN = 0;
 
     // ---------- 評価関数 ----------
     function H(state, me) {
@@ -14,7 +15,7 @@
       state.bases.forEach((b, bi) => {
         if (!b.stacks[me].length) return;
         const bdef = D.bases[b.id];
-        const prog = Math.max(Math.min(1, E.baseTotal(D, state, bi) / bdef.bp), progressFloor);
+        const prog = Math.max(Math.min(1, E.baseTotal(D, state, bi) / E.baseBP(D, state, bi)), progressFloor);
         const r = E.ranking(D, state, bi)[me];
         h += Math.pow(prog, 1.3) * (bdef.vp[r] || 0);
       });
@@ -102,14 +103,11 @@
       return (state, seat, kind, options) => options[Math.floor(rand() * options.length)];
     }
 
-    // 行動選択：自分の配置＋公開だけを仮適用して評価（他人の同時手は読まない）
-    function greedyAction(state, seat, rand, chooser) {
+    // 手札 1 枚を 1 か所に（表/裏も含めて）置いた結果を全部試し、評価が最大のものを返す
+    function bestPlay(state, seat, rand, chooser, value) {
+      const valueOf = value || (st => H(st, seat));
       const p = state.players[seat];
-      let best = { type: 'refresh' }, bestUp = false;
-      const sR = clone(state);
-      const target = 5;
-      const w4 = state.bases.some((b) => b.stacks[seat].some(x => x.faceUp && x.cid === 'w4'));
-      let bv = H(sR, seat) + 0.35 * Math.max(0, target - p.hand.length) * 0.9 - 1.2 + (w4 ? 1.5 : 0);
+      let best = null;
       p.hand.forEach(c => {
         state.bases.forEach((b, bi) => {
           [false, true].forEach(up => {
@@ -123,15 +121,105 @@
               card.faceUp = true;
               E.onReveal({ D, rand, chooser }, s2, card);
             }
-            const v = H(s2, seat) + rand() * 0.05;
-            if (v > bv) { bv = v; best = { type: 'play', uid: c.uid, bi }; bestUp = up; }
+            const v = valueOf(s2) + rand() * 0.05;
+            if (!best || v > best.v) best = { v, uid: c.uid, bi, up, state: s2 };
           });
         });
       });
-      return { action: best, up: bestUp };
+      return best;
     }
 
-    return { H, makeGreedyChooser, randomChooser, greedyAction, applyBoardOption };
+    // 行動選択：自分の配置＋公開だけを仮適用して評価（他人の同時手は読まない）
+    // 2 枚まで置けるルールなら、1 枚目を置いた後の盤面でもう 1 枚置くかを同じように決める
+    function greedyAction(state, seat, rand, chooser, value) {
+      const valueOf = value || (st => H(st, seat));
+      const p = state.players[seat];
+      const target = 5;
+      const w4 = state.bases.some((b) => b.stacks[seat].some(x => x.faceUp && x.cid === 'w4'));
+      const refreshValue = valueOf(clone(state)) + 0.35 * Math.max(0, target - p.hand.length) * 0.9 - 1.2 + (w4 ? 1.5 : 0);
+      const first = bestPlay(state, seat, rand, chooser, valueOf);
+      if (!first || !(first.v > refreshValue)) return { action: { type: 'refresh' }, up: false, ups: {} };
+      const ups = { [first.uid]: first.up };
+      let action = { type: 'play', uid: first.uid, bi: first.bi };
+      const maxPlays = state.rules ? state.rules.maxPlays : E.MAX_PLAYS;
+      if (maxPlays >= 2) {
+        const second = bestPlay(first.state, seat, rand, chooser, valueOf);
+        if (second && second.v > first.v + SECOND_PLAY_MARGIN) {
+          action = { type: 'play', plays: [{ uid: first.uid, bi: first.bi }, { uid: second.uid, bi: second.bi }] };
+          ups[second.uid] = second.up;
+        }
+      }
+      return { action, up: first.up, ups };
+    }
+
+    // ---------- 読むボット ----------
+    // 相手の手札は見ない。公開情報（相手の派閥・どの基地にカードがあるか・基地の進み具合）から
+    // 相手が置きそうな場所を予想し、その予想した盤面で自分の手を評価する。
+    // さらに、先頭のプレイヤーが得をする手を少し嫌う（先頭を止める）。
+    const READ_SCENARIOS = 4;
+    const LEADER_WEIGHT = 0.3;
+
+    function placeWeights(state, o) {
+      const p = state.players[o];
+      return state.bases.map((b, bi) => {
+        const bdef = D.bases[b.id];
+        const match = bdef.tags.some(t => p.factions.includes(t));
+        const here = b.stacks[o].length > 0;
+        const prog = Math.min(1, E.baseTotal(D, state, bi) / E.baseBP(D, state, bi));
+        return 1 + (match ? 1.5 : 0) + (here ? 1 : 0) + prog * 1.5;
+      });
+    }
+
+    function pickIndex(weights, rand) {
+      const sum = weights.reduce((a, x) => a + x, 0);
+      let r = rand() * sum;
+      for (let i = 0; i < weights.length; i++) { r -= weights[i]; if (r <= 0) return i; }
+      return weights.length - 1;
+    }
+
+    // 予想：各相手が置く場所と枚数（派閥が合う基地なら表にできるぶん値を高めに見る＝伏せ札 2 枚ぶん）
+    function makeScenarios(state, me, rand) {
+      const out = [];
+      for (let k = 0; k < READ_SCENARIOS; k++) {
+        const sc = [];
+        state.players.forEach((p, o) => {
+          if (o === me || !p.hand.length && !p.handCount) return;
+          const bi = pickIndex(placeWeights(state, o), rand);
+          const match = D.bases[state.bases[bi].id].tags.some(t => p.factions.includes(t));
+          sc.push({ o, bi, n: match ? 2 : 1 });
+        });
+        out.push(sc);
+      }
+      return out;
+    }
+
+    function withPhantoms(st, sc) {
+      const t = clone(st);
+      sc.forEach(({ o, bi, n }, k) => {
+        for (let i = 0; i < n; i++) t.bases[bi].stacks[o].push({ uid: -1 - k * 4 - i, cid: null, owner: o, faceUp: false });
+      });
+      return t;
+    }
+
+    function readerValue(state, me, rand) {
+      const scenarios = makeScenarios(state, me, rand);
+      return st => {
+        let sum = 0;
+        scenarios.forEach(sc => {
+          const t = withPhantoms(st, sc);
+          let lead = -Infinity;
+          t.players.forEach((_, o) => { if (o !== me) lead = Math.max(lead, H(t, o)); });
+          sum += H(t, me) - LEADER_WEIGHT * lead;
+        });
+        return sum / scenarios.length;
+      };
+    }
+
+    function readerAction(state, seat, rand, chooser) {
+      return greedyAction(state, seat, rand, chooser, readerValue(state, seat, rand));
+    }
+
+    return { H, makeGreedyChooser, randomChooser, greedyAction, readerAction, applyBoardOption };
   }
 
   if (typeof module !== 'undefined' && module.exports) module.exports = { createBots };

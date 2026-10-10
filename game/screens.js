@@ -135,37 +135,56 @@
   }
 
   // ---------- 配置 ----------
+  // 1〜2 枚を選んで基地に伏せる。伏せる予定のカードは盤面に裏向きで仮置きして見せる
   function plan(App) {
     const S = App.S, D = App.D, T = App.T;
     const seat = S.plan.order[S.plan.idx];
     const view = E.viewFor(S.game, seat);
     const me = view.players[seat];
+    const maxPlays = (S.game.rules || { maxPlays: E.MAX_PLAYS }).maxPlays;
+    const preview = JSON.parse(JSON.stringify(view));
+    T.plays.forEach(pl => {
+      const hand = preview.players[seat].hand;
+      const i = hand.findIndex(c => c.uid === pl.uid);
+      if (i >= 0) preview.bases[pl.bi].stacks[seat].push(Object.assign(hand.splice(i, 1)[0], { faceUp: false }));
+    });
     const sel = T.planSel != null ? me.hand.find(c => c.uid === T.planSel) : null;
     const o = D.objectives[me.objective];
-    let dock;
+    const planned = T.plays.map((pl, k) => {
+      const c = me.hand.find(x => x.uid === pl.uid);
+      return `<li>${'①②'[k]}「${esc(D.cards[c.cid].name)}」→ <b>${esc(D.bases[view.bases[pl.bi].id].name)}</b></li>`;
+    }).join('');
+    let dock = planned ? `<ol class="planned">${planned}</ol>` : '';
     if (sel) {
       const def = D.cards[sel.cid];
-      dock = `<div class="dock-detail f-${def.faction}"><b>${def.value} ${esc(def.name)}</b><span>${esc(def.text)}</span>${UI.glossary(def.text)}</div>` +
-        (T.planBase == null ? '<p class="dock-hint">↑ 伏せる基地を選ぶ（各基地の下のボタン）</p>'
-          : `<p class="dock-hint">「${esc(def.name)}」を <b>${esc(D.bases[view.bases[T.planBase].id].name)}</b> に伏せる</p>`);
+      dock += `<div class="dock-detail f-${def.faction}"><b>${def.value} ${esc(def.name)}</b><span>${esc(def.text)}</span>${UI.glossary(def.text)}</div>` +
+        '<p class="dock-hint">↑ 伏せる基地を選ぶ（各基地の下の「ここに伏せる」）</p>';
     } else if (T.planRefresh) {
-      dock = `<p class="dock-hint">リフレッシュ：何も置かず、公開のときに手札が 5 枚になるまで引く。</p>`;
+      dock += '<p class="dock-hint">リフレッシュ：何も置かず、公開のときに手札が 5 枚になるまで引く。</p>';
+    } else if (!T.plays.length) {
+      dock += `<p class="dock-hint">手札から 1〜${maxPlays} 枚を選んで基地に伏せる。または「リフレッシュ」。</p>`;
+    } else if (T.plays.length < maxPlays) {
+      dock += '<p class="dock-hint">もう 1 枚置いてもいい（そのぶん手札が減る）。このままなら「決定」。置いたカードをもう一度タップすると取り消し。</p>';
     } else {
-      dock = `<p class="dock-hint">手札から 1 枚選んで基地に伏せる。または「リフレッシュ」。</p>`;
+      dock += '<p class="dock-hint">これで決定する？ 置いたカードをもう一度タップすると取り消し。</p>';
     }
-    const ready = T.planRefresh || (sel && T.planBase != null);
+    const ready = T.planRefresh || T.plays.length > 0;
+    const hand = me.hand.map(c => {
+      const k = T.plays.findIndex(p => p.uid === c.uid);
+      return UI.handCard(D, c, c.uid === T.planSel, k >= 0 ? '①②'[k] : null);
+    }).join('');
     return `${UI.playersBar(view, S.names, { viewer: seat, phase: `${S.names[seat]}さん：配置` })}
       <main class="screen play-screen">
         <div class="mine"><button type="button" class="objchip" data-act="objective" data-seat="${seat}">目標：${esc(o.name)}</button>
           <span class="myfac">${me.factions.map(f => factionChip(D, f)).join('')}</span></div>
-        ${UI.board(D, E, view, { names: S.names, viewer: seat, selectCard: sel, selectedBase: T.planBase })}
+        ${UI.board(D, E, preview, { names: S.names, viewer: seat, selectCard: sel, highlight: T.plays.map(p => p.uid) })}
       </main>
       <footer class="dock">
-        <div class="hand" aria-label="手札">${me.hand.map(c => UI.handCard(D, c, c.uid === T.planSel)).join('') || '<span class="dim">手札がない</span>'}</div>
+        <div class="hand" aria-label="手札">${hand || '<span class="dim">手札がない</span>'}</div>
         ${dock}
         <div class="dock-actions">
           <button type="button" class="btn${T.planRefresh ? ' is-on' : ''}" data-act="refresh">リフレッシュ</button>
-          <button type="button" class="btn primary" data-act="plan-ok"${ready ? '' : ' disabled'}>決定</button>
+          <button type="button" class="btn primary" data-act="plan-ok"${ready ? '' : ' disabled'}>決定${T.plays.length ? `（${T.plays.length} 枚）` : ''}</button>
         </div>
       </footer>`;
   }

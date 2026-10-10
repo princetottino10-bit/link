@@ -82,11 +82,14 @@ const pickOne = arr => arr[Math.floor(rand() * arr.length)];
       const hand = await count('[data-act="hand"]');
       if (!hand || rand() < 0.12) await click('[data-act="refresh"]');
       else {
-        await page.locator('[data-act="hand"]').nth(Math.floor(rand() * hand)).click();
-        // 効果の選択を多く通すため、表にできる基地を優先する
-        const up = await count('.place.can-up');
-        const sel = up && rand() < 0.85 ? '.place.can-up' : '[data-act="place"]';
-        await page.locator(sel).nth(Math.floor(rand() * await count(sel))).click();
+        // 1〜2 枚置く。効果の選択を多く通すため、表にできる基地を優先する
+        const n = hand >= 2 && rand() < 0.5 ? 2 : 1;
+        for (let k = 0; k < n; k++) {
+          await page.locator('.hcard:not(.is-planned)').nth(Math.floor(rand() * await count('.hcard:not(.is-planned)'))).click();
+          const up = await count('.place.can-up');
+          const sel = up && rand() < 0.85 ? '.place.can-up' : '[data-act="place"]';
+          await page.locator(sel).nth(Math.floor(rand() * await count(sel))).click();
+        }
         if (!shots.has('05-plan')) {
           await shot('05-plan');
           await shot('05b-plan-full', true);

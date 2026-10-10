@@ -48,7 +48,7 @@
 .f-trick { --fc: var(--f-trick); }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; scroll-padding-top: 140px; scroll-padding-bottom: 300px; }
 body {
   margin: 0;
   min-height: 100dvh;
@@ -481,3 +481,7 @@ details.panel summary { font-weight: 700; cursor: pointer; }
 .auto-banner p { margin: 0; font-size: 14px; }
 .my-fac { margin: 6px 0 0; font-size: 14px; }
 .my-fac .dim { display: block; font-size: 12px; }
+.hcard { position: relative; }
+.hcard.is-planned { opacity: .55; transform: translateY(4px); box-shadow: none; }
+.plan-mark { position: absolute; top: -9px; left: -6px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 999px; background: var(--hl); color: var(--ink); border: 2px solid var(--ink); font-size: 13px; font-weight: 700; }
+.planned { margin: 0; padding: 6px 10px; list-style: none; display: grid; gap: 2px; font-size: 14px; background: var(--card); border: 1.5px solid var(--ink); border-radius: var(--r-s); }
