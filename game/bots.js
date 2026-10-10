@@ -104,11 +104,13 @@
     }
 
     // 手札 1 枚を 1 か所に（表/裏も含めて）置いた結果を全部試し、評価が最大のものを返す
-    function bestPlay(state, seat, rand, chooser, value) {
+    // allowed：選んでよいカードの uid（2 枚目以降は、計画した時点で実際に手札にあるカードだけ）
+    function bestPlay(state, seat, rand, chooser, value, allowed) {
       const valueOf = value || (st => H(st, seat));
       const p = state.players[seat];
       let best = null;
       p.hand.forEach(c => {
+        if (allowed && !allowed.has(c.uid)) return;
         state.bases.forEach((b, bi) => {
           [false, true].forEach(up => {
             if (up && !E.canFaceUp(D, state, bi, c)) return;
@@ -142,9 +144,11 @@
       let action = { type: 'play', uid: first.uid, bi: first.bi };
       const maxPlays = E.maxPlaysFor(D, state, seat);
       const plays = [{ uid: first.uid, bi: first.bi }];
+      const inHand = new Set(p.hand.map(c => c.uid));
       let prev = first;
       while (plays.length < maxPlays) {
-        const next = bestPlay(prev.state, seat, rand, chooser, valueOf);
+        plays.forEach(pl => inHand.delete(pl.uid));
+        const next = bestPlay(prev.state, seat, rand, chooser, valueOf, inHand);
         if (!next || !(next.v > prev.v + SECOND_PLAY_MARGIN)) break;
         plays.push({ uid: next.uid, bi: next.bi });
         ups[next.uid] = next.up;

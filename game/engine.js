@@ -334,6 +334,7 @@
         const t = choose(ctx, state, me, 'flipUpOwn', opts, { bi });
         if (t != null) {
           const f = findCard(state, t); f.card.faceUp = true; p.stats.fu++;
+          delete f.card.pending; // このラウンドに伏せたカードなら、ここで公開済みになる
           log(state, `P${me + 1} の「${D.cards[f.card.cid].name}」が表向きになった @${baseName(D, state, f.bi)}`);
           onReveal(ctx, state, f.card);
         }
@@ -579,9 +580,10 @@
     const { D } = ctx;
     const p = state.players[s];
     const f = findCard(state, uid);
-    if (!f || !f.card.pending) { log(state, `P${s + 1} のカードは公開前に戻された`, { kind: 'gone', seat: s }); return; }
+    if (!f) { log(state, `P${s + 1} のカードは公開前に戻された`, { kind: 'gone', seat: s }); return; }
+    // 効果ですでに公開済み（上忍で表にされた）、または手札に戻って出し直されたカードは公開しない
+    if (!f.card.pending) return;
     delete f.card.pending;
-    if (f.card.faceUp) return; // 効果ですでに表になっている
     let up = false;
     if (canFaceUp(D, state, f.bi, f.card)) up = choose(ctx, state, s, 'faceUp', [true, false], { bi: f.bi, uid });
     if (up) {
