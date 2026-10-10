@@ -55,7 +55,7 @@
         <div class="cover-card">
           <div class="cover-title">🔥 ランクマッチ</div>
           <p>7〜10文字の言葉を<b>3問</b>。<br>解き終えるまでの<b>タイム</b>で競います。<br>同じタイムなら手数が少ない方が上。</p>
-          <p class="cover-small">1問ごとにライフ3。0になったら失敗。<br>漢字ヒントは +30秒。</p>
+          <p class="cover-small">1問ごとにライフ3。0になったら失敗。</p>
           <button class="btn primary big" id="startMatch">スタート</button>
         </div>
       </div>
@@ -66,7 +66,6 @@
     <div class="panel">
       <div class="panel-title">見つけた文字（タップで入力）</div>
       <div class="chips" id="chips"></div>
-      <div class="hint-kanji" id="hintText" hidden></div>
       <div class="answer-row" id="answerRow">
         <input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ひらがなで答える" aria-label="答え">
         <button class="btn primary" id="submit">こたえる</button>
@@ -75,7 +74,6 @@
         <button class="btn" id="kDaku" title="直前の文字に濁点・半濁点・小文字をつける">゛゜小</button>
         <button class="btn" id="kBack" aria-label="1文字消す">⌫</button>
         <button class="btn" id="kClear">クリア</button>
-        <button class="btn" id="hint">💡 漢字ヒント</button>
       </div>
       <div class="guesses" id="guesses" aria-label="これまでの答え"></div>
       <div class="legend" id="legend" hidden><b style="background:#2f9e57"></b>場所も正解<b style="background:#c9971c"></b>地雷の文字<b style="background:rgba(255,255,255,.25)"></b>地雷じゃない</div>
@@ -98,7 +96,7 @@
         <li>濁点・半濁点・小さい文字は元の文字（が→か、ぱ→は、っ→つ）が地雷になります。</li>
         <li>いつでも答えられます。まちがえるとライフが1減りますが、1文字ずつ<b>🟩場所も正解・🟨地雷の文字・⬜地雷じゃない</b>が分かります。</li>
         <li><b>手数＝マスを開けた回数＋答えた回数</b>。</li>
-        <li><b>🔥ランクマッチ</b>は3問を解き終えるまでのタイムで🏆ランキングに挑戦。漢字ヒントは +30秒。</li>
+        <li><b>🔥ランクマッチ</b>は3問を解き終えるまでのタイムで🏆ランキングに挑戦。</li>
       </ol>
     </details>
 

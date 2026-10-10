@@ -1,7 +1,7 @@
 import { LONG_WORDS } from './long-words.js';
 import {
   ROWS, COLS, MAX_LIVES, idx, toHira, baseKana, variants, buildCells, floodOpen, checkAnswerShape,
-  judgeGuess, knowledge, pickWords, formatTime, SHARE_MARK, MATCH_SIZE, HINT_PENALTY_MS
+  judgeGuess, knowledge, pickWords, formatTime, SHARE_MARK, MATCH_SIZE
 } from './rules.js';
 import { loadStats, recordPractice, recordMatch, loadName, saveName } from './stats.js';
 import { submitScore, fetchMyStanding, RankingError } from './ranking.js';
@@ -41,7 +41,7 @@ let timerHandle = null;
 const GENRE_OF = new Map(LONG_WORDS.map(([w, , g]) => [w, g]));
 const freshPuzzle = ([word, kanji, genre]) => ({
   word, kanji, genre: genre || GENRE_OF.get(word) || '', open: [], flags: [], booms: [], guesses: [], opens: [],
-  lives: MAX_LIVES, moves: 0, done: false, won: false, hinted: false
+  lives: MAX_LIVES, moves: 0, done: false, won: false
 });
 const EMPTY = { ...freshPuzzle(['', '', '']), done: true };
 
@@ -196,17 +196,6 @@ function submitAnswer() {
   render();
 }
 
-function useHint() {
-  if (S.done || S.hinted) return;
-  S.hinted = true;
-  if (mode === 'ranked') {
-    M.penaltyMs += HINT_PENALTY_MS;
-    toast('漢字ヒント +30秒');
-  }
-  save();
-  render();
-}
-
 function finishPuzzle(won) {
   S.done = true;
   S.won = won;
@@ -334,20 +323,11 @@ function renderGuesses() {
   newGuess = false;
 }
 
-function renderHint() {
-  $('hintText').hidden = !S.hinted;
-  if (!S.hinted) return;
-  const small = document.createElement('small');
-  small.textContent = '漢字ヒント';
-  $('hintText').replaceChildren(small, S.kanji);
-}
-
 function render() {
   const know = knowledge(cells, S);
   renderBoard(know);
   renderChips(know);
   renderGuesses();
-  renderHint();
 
   const ranked = mode === 'ranked';
   $('tabPractice').classList.toggle('active', !ranked);
@@ -364,9 +344,7 @@ function render() {
   $('timer').classList.toggle('running', !!timerHandle);
   if (ranked) tick(); else $('timer').textContent = '-';
 
-  $('hint').textContent = ranked ? '💡 漢字ヒント +30秒' : '💡 漢字ヒント';
   for (const id of ['answer', 'submit', 'kDaku', 'kBack', 'kClear', 'giveUp']) $(id).disabled = S.done;
-  $('hint').disabled = S.done || S.hinted;
   $('giveUp').hidden = S.done;
   $('next').hidden = ranked || !S.done;
   $('retry').hidden = !ranked || !M || !M.done;
@@ -387,23 +365,22 @@ function shareText() {
   if (mode === 'ranked') {
     const head = M.cleared ? `⏱ ${formatTime(elapsed(M))}（${totalMoves(M)}手）` : '💥 失敗…';
     const lines = M.puzzles.filter(p => p.done)
-      .map((p, i) => `Q${i + 1} ${p.won ? '✅' : '💥'} ${p.moves}手${p.hinted ? ' 💡' : ''}`);
+      .map((p, i) => `Q${i + 1} ${p.won ? '✅' : '💥'} ${p.moves}手`);
     return `五十音マインスイーパ 🔥ランクマッチ\n${head}\n${lines.join('\n')}\n${URL_SELF}`;
   }
   const head = S.won
-    ? `練習：${S.genre}・${[...S.word].length}文字を ${S.moves}手で正解${S.hinted ? ' 💡' : ''}`
+    ? `練習：${S.genre}・${[...S.word].length}文字を ${S.moves}手で正解`
     : '練習：💥 ざんねん…';
   return `五十音マインスイーパ\n${head}\n${guessLine(S)}\n${URL_SELF}`;
 }
 
 function showResult() {
   if (mode === 'ranked' && M) {
-    const hints = M.puzzles.filter(p => p.hinted).length;
     $('modalHead').textContent = M.cleared ? '🏁 3問クリア！' : '💥 失敗…';
     $('modalBadge').textContent = M.cleared && M.newBest ? '🎉 自己ベスト更新！' : '';
     $('modalWord').textContent = M.cleared ? formatTime(elapsed(M)) : S.word;
     $('modalGenre').textContent = M.puzzles.filter(p => p.done).map(p => `${p.word}（${p.kanji}）`).join(' / ');
-    $('modalStats').innerHTML = `手数 <b>${totalMoves(M)}</b>　漢字ヒント ${hints}回`
+    $('modalStats').innerHTML = `手数 <b>${totalMoves(M)}</b>`
       + (M.cleared ? '' : `<br><small style="color:var(--muted)">${M.index + 1}問目で終了</small>`);
   } else {
     $('modalHead').textContent = S.won ? '🎉 正解！' : '💥 ざんねん…';
@@ -560,7 +537,6 @@ $('kDaku').addEventListener('click', () => {
   chars.push(list[(pos + 1) % list.length]);
   $('answer').value = chars.join('');
 });
-$('hint').addEventListener('click', useHint);
 $('giveUp').addEventListener('click', () => {
   if (S.done) return;
   const q = mode === 'ranked' ? 'ランクマッチをあきらめますか？（記録は残りません）' : 'あきらめて答えを見ますか？';
